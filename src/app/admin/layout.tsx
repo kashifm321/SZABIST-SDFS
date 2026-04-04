@@ -1,33 +1,39 @@
 import { cookies } from 'next/headers';
 import DashboardShell from '@/components/layout/DashboardShell';
+import prisma from '@/lib/prisma';
+import { verifySession as verifySessionAuth } from '@/lib/auth';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('session')?.value;
-  
   let user = { name: 'Admin User', email: 'admin@szabist-isb.edu.pk' };
-  
-  if (token) {
-    try {
-      const { verifySession: verifySessionAuth } = await import('@/lib/auth');
+
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('session')?.value;
+
+    if (token) {
       const session = await verifySessionAuth(token);
       
       if (session && session.userId) {
-        const prisma = (await import('@/lib/prisma')).default;
-        const dbUser = await prisma.user.findUnique({
-          where: { id: Number(session.userId) },
-        });
+        // Safe conversion of userId - handles both string/number payload
+        const userId = Number(session.userId);
+        
+        if (!isNaN(userId)) {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: userId },
+          });
 
-        if (dbUser) {
-          user = {
-            name: dbUser.name,
-            email: dbUser.email,
-          };
+          if (dbUser) {
+            user = {
+              name: dbUser.name || 'Admin User',
+              email: dbUser.email || 'admin@szabist-isb.edu.pk',
+            };
+          }
         }
       }
-    } catch (error) {
-      console.error('Layout user fetch error:', error);
     }
+  } catch (error) {
+    console.error('CRITICAL: AdminLayout session/user fetch error:', error);
+    // Continue with default 'Admin User' to prevent 500 crash
   }
 
   return (

@@ -1,11 +1,9 @@
-'use server'
+'use server';
 
-import { PrismaClient } from '@prisma/client'
-import { revalidatePath } from 'next/cache'
-import bcrypt from 'bcryptjs'
-import nodemailer from 'nodemailer'
-
-const prisma = new PrismaClient()
+import prisma from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 
 export async function addStudent(_prevState: any, formData: FormData) {
   try {

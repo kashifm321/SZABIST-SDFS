@@ -172,7 +172,11 @@ function DashboardShellContent({
                       ? 'bg-[#071a4a] text-white'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
-                  {IconComponent && <IconComponent className="w-4 h-4 flex-shrink-0" />}
+                  {typeof IconComponent === 'function' ? (
+                    <IconComponent className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <div className="w-4 h-4 bg-gray-200 rounded-sm flex-shrink-0" />
+                  )}
                   <span className="flex-1">{item.label}</span>
                   {item.subItems && (
                     <Menu className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
