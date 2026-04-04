@@ -21,13 +21,17 @@ export async function middleware(request: NextRequest) {
   }
 
   // Exceptions for public portals: Do NOT redirect if user is going to our public landing page or login pages
+  const sessionToken = request.cookies.get('session')?.value;
   const isPublicRoute = path === '/login' || path === '/register' || path === '/' || path === '/change-password';
-  if (isPublicRoute && !path.startsWith('/change-password')) {
-    console.log(`[Middleware] On public route ${path}, skipping redirects.`);
-    return NextResponse.next();
+
+  // If it's the root path and we have a session, we'll want to verify it first before showing the landing page
+  if (isPublicRoute && path !== '/') {
+    if (!path.startsWith('/change-password')) {
+      console.log(`[Middleware] On public route ${path}, skipping redirects.`);
+      return NextResponse.next();
+    }
   }
 
-  const sessionToken = request.cookies.get('session')?.value;
   let sessionPayload = null;
 
   if (sessionToken) {

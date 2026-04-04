@@ -45,6 +45,14 @@ type DashboardShellProps = {
   children?: React.ReactNode;
 };
 
+// Helper for ultra-safe icon rendering (prevents 500 error if icon is missing)
+const SafeIcon = ({ icon: Icon, className }: { icon: any, className?: string }) => {
+  if (!Icon || typeof Icon !== 'function') {
+    return <div className={`${className} bg-gray-200/50 rounded-sm flex-shrink-0`} />;
+  }
+  return <Icon className={className} />;
+};
+
 function DashboardShellContent({
   user,
   role,
@@ -172,14 +180,10 @@ function DashboardShellContent({
                       ? 'bg-[#071a4a] text-white'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
-                  {typeof IconComponent === 'function' ? (
-                    <IconComponent className="w-4 h-4 flex-shrink-0" />
-                  ) : (
-                    <div className="w-4 h-4 bg-gray-200 rounded-sm flex-shrink-0" />
-                  )}
+                  <SafeIcon icon={IconComponent} className="w-4 h-4 flex-shrink-0" />
                   <span className="flex-1">{item.label}</span>
                   {item.subItems && (
-                    <Menu className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    <SafeIcon icon={Menu} className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                   )}
                 </button>
 
@@ -213,7 +217,7 @@ function DashboardShellContent({
                 <p className="text-blue-200 text-xs mt-0.5">{roleLabel} Account</p>
               </div>
               <button onClick={() => setShowProfileModal(false)} className="text-white/70 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
+                <SafeIcon icon={X} className="w-5 h-5" />
               </button>
             </div>
             <div className="p-8 space-y-6">
@@ -265,7 +269,7 @@ function DashboardShellContent({
                 <p className="text-blue-200 text-xs mt-0.5">Update your account password</p>
               </div>
               <button onClick={() => setShowPasswordModal(false)} className="text-white/70 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
+                <SafeIcon icon={X} className="w-5 h-5" />
               </button>
             </div>
             
@@ -292,7 +296,7 @@ function DashboardShellContent({
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">New Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#071a4a] transition-colors" />
+                  <SafeIcon icon={Lock} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#071a4a] transition-colors" />
                   <input
                     name="password"
                     type={showPassword ? "text" : "password"}
@@ -306,7 +310,7 @@ function DashboardShellContent({
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#071a4a] transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <SafeIcon icon={EyeOff} className="w-4 h-4" /> : <SafeIcon icon={Eye} className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -314,7 +318,7 @@ function DashboardShellContent({
               <div>
                 <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Confirm Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#071a4a] transition-colors" />
+                  <SafeIcon icon={Lock} className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#071a4a] transition-colors" />
                   <input
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
@@ -327,7 +331,7 @@ function DashboardShellContent({
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#071a4a] transition-colors"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showConfirmPassword ? <SafeIcon icon={EyeOff} className="w-4 h-4" /> : <SafeIcon icon={Eye} className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
@@ -338,7 +342,7 @@ function DashboardShellContent({
                   disabled={isPending}
                   className="w-full bg-[#071a4a] hover:bg-[#050f2e] text-white py-3 rounded-xl text-sm font-bold shadow-xl shadow-[#071a4a]/20 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Updating...</> : 'Save Changes'}
+                  {isPending ? <><SafeIcon icon={Loader2} className="w-4 h-4 animate-spin" /> Updating...</> : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -354,7 +358,7 @@ function DashboardShellContent({
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setSidebarOpen(true)}>
-              <Menu className="w-5 h-5" />
+              <SafeIcon icon={Menu} className="w-5 h-5" />
             </button>
             <h2 className="hidden sm:block text-sm font-semibold text-gray-500">{roleLabel} Portal</h2>
             {headerExtra}
@@ -378,17 +382,17 @@ function DashboardShellContent({
                   <button 
                     onClick={() => { setDropdownOpen(false); setShowProfileModal(true); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <User className="w-4 h-4" /> Profile
+                    <SafeIcon icon={User} className="w-4 h-4" /> Profile
                   </button>
                   <button 
                     onClick={() => { setDropdownOpen(false); setShowPasswordModal(true); setPasswordError(''); setPasswordSuccess(''); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                    <KeyRound className="w-4 h-4" /> Password Setting
+                    <SafeIcon icon={KeyRound} className="w-4 h-4" /> Password Setting
                   </button>
                   <form action={logoutUser}>
                     <button type="submit"
                       className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors border-t border-gray-100">
-                      <LogOut className="w-4 h-4" /> Logout
+                      <SafeIcon icon={LogOut} className="w-4 h-4" /> Logout
                     </button>
                   </form>
                 </div>
