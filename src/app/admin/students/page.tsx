@@ -20,6 +20,7 @@ export default async function ManageStudentsPage() {
     return {
       ...s,
       role: s.role as string,
+      registrationNumber: s.registrationNumber ?? undefined,
       firstName: parts[0] || '',
       lastName: parts.slice(1).join(' ') || '',
     };
