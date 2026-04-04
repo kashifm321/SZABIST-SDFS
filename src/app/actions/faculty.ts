@@ -75,12 +75,23 @@ export async function updateFaculty(id: number, firstName: string, lastName: str
 
 export async function deleteFaculty(id: number) {
   try {
+    // Safety check: Is the teacher assigned to any classes?
+    const assignedModule = await prisma.module.findFirst({
+      where: { teacherId: id }
+    });
+
+    if (assignedModule) {
+      return { 
+        error: 'Cannot delete faculty. This teacher is currently assigned to one or more classes. Please unassign them from all classes first.' 
+      };
+    }
+
     await prisma.user.delete({ where: { id } });
     revalidatePath('/admin/faculty');
     return { success: true };
   } catch (error) {
     console.error('Delete faculty error:', error);
-    return { error: 'Failed to delete faculty member.' };
+    return { error: 'Failed to delete faculty member. Please try again.' };
   }
 }
 

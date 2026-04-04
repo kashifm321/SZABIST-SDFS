@@ -102,6 +102,25 @@ export async function changePassword(prevState: any, formData: FormData) {
       },
     });
 
+    // REFRESH SESSION: Create a new session token with mustChangePassword: false
+    const sessionPayload = {
+      userId: session.userId,
+      name: session.name,
+      email: session.email,
+      role: session.role,
+      mustChangePassword: false,
+    };
+
+    const { createSession } = await import('@/lib/auth');
+    const token2 = await createSession(sessionPayload);
+
+    cookieStore.set('session', token2, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: '/',
+    });
+
     return { success: true };
 
   } catch (error) {

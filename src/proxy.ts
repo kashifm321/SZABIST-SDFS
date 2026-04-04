@@ -7,11 +7,12 @@ const getJwtSecretKey = () => {
   return new TextEncoder().encode(secret);
 };
 
-export async function middleware(request: NextRequest) {
+// Next.js 16 Proxy Convention
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  console.log(`[Middleware] Target Path: ${path}`);
+  console.log(`[Proxy] Target Path: ${path}`);
 
-  // Static Files: Ensure the middleware completely ignores /_next, /api, and images.
+  // 1. Static Files: Ensure the proxy completely ignores /_next, /api, and images.
   if (
     path.startsWith('/_next') ||
     path.startsWith('/api') ||
@@ -20,46 +21,47 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Exceptions for public portals: Do NOT redirect if user is going to our public landing page or login pages
-  const sessionToken = request.cookies.get('session')?.value;
+  // 2. Public Routes: Skip all authentication and redirect logic for these paths to avoid loops.
   const isPublicRoute = path === '/login' || path === '/register' || path === '/' || path === '/change-password';
-
-  // If it's the root path and we have a session, we'll want to verify it first before showing the landing page
   if (isPublicRoute && path !== '/') {
-    if (!path.startsWith('/change-password')) {
-      console.log(`[Middleware] On public route ${path}, skipping redirects.`);
-      return NextResponse.next();
-    }
+    console.log(`[Proxy] On public route ${path}, skipping further checks.`);
+    return NextResponse.next();
   }
 
+  const sessionToken = request.cookies.get('session')?.value;
   let sessionPayload = null;
 
   if (sessionToken) {
     try {
       const { payload } = await jwtVerify(sessionToken, getJwtSecretKey());
       sessionPayload = payload;
-      console.log(`[Middleware] Session Decoded, Role: ${sessionPayload.role}`);
+      console.log(`[Proxy] Session Decoded, Role: ${sessionPayload.role}`);
     } catch (error) {
-      console.error('[Middleware] JWT Decode Error:', error);
+      console.error('[Proxy] JWT Decode Error:', error);
+      // Already handled by deletion and redirect, but ONLY if not on login already to prevent loops.
+      if (path === '/login') return NextResponse.next();
+      
       const response = NextResponse.redirect(new URL('/login', request.nextUrl));
       response.cookies.delete('session');
       return response;
     }
   }
 
-  // If no token is found and the user is NOT on /login, only then redirect to /login.
+  // 3. Authorization Checks:
   if (!sessionPayload) {
-    console.log('[Middleware] No token found, redirecting to /login');
+    console.log('[Proxy] No token found, checking if on public route.');
+    if (isPublicRoute) return NextResponse.next();
+    
+    console.log('[Proxy] Redirecting to /login from unauthorized path.');
     return NextResponse.redirect(new URL('/login', request.nextUrl));
   }
 
-  // Check Role: Only redirect to a dashboard AFTER verifying the user's role from the token.
   const role = sessionPayload.role as string;
   const mustChangePassword = sessionPayload.mustChangePassword as boolean;
 
   // Force password change if flag is set (allow access to /change-password route)
   if (mustChangePassword && path !== '/change-password') {
-    console.log('[Middleware] Force password change detected, redirecting to /change-password');
+    console.log('[Proxy] Force password change detected, redirecting to /change-password');
     return NextResponse.redirect(new URL('/change-password', request.nextUrl));
   }
 
@@ -69,15 +71,15 @@ export async function middleware(request: NextRequest) {
   }
   
   if (path.startsWith('/admin') && role !== 'ADMIN') {
-     console.log('[Middleware] Admin unauthorized, redirecting to correct dashboard');
+     console.log('[Proxy] Admin unauthorized, redirecting to correct dashboard');
      return redirectBasedOnRole(role, request);
   }
   if (path.startsWith('/teacher') && role !== 'TEACHER') {
-     console.log('[Middleware] Teacher unauthorized, redirecting to correct dashboard');
+     console.log('[Proxy] Teacher unauthorized, redirecting to correct dashboard');
      return redirectBasedOnRole(role, request);
   }
   if (path.startsWith('/student') && role !== 'STUDENT') {
-     console.log('[Middleware] Student unauthorized, redirecting to correct dashboard');
+     console.log('[Proxy] Student unauthorized, redirecting to correct dashboard');
      return redirectBasedOnRole(role, request);
   }
 
@@ -86,7 +88,7 @@ export async function middleware(request: NextRequest) {
     return redirectBasedOnRole(role, request);
   }
 
-  console.log('[Middleware] Proceeding normally');
+  console.log('[Proxy] Proceeding normally');
   return NextResponse.next();
 }
 

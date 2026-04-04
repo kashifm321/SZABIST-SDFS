@@ -81,11 +81,18 @@ export default function ManageFacultyClient({ faculty }: { faculty: Faculty[] })
 
   const handleDelete = () => {
     if (!deletingId) return;
+    setErrorMsg('');
     startTransition(async () => {
-      await deleteFaculty(deletingId);
-      setDeletingId(null);
-      setShowConfirm(false);
-      router.refresh();
+      const result = await deleteFaculty(deletingId);
+      if (result?.error) {
+        setErrorMsg(result.error);
+        setShowConfirm(false); // Close but keep ID for retry? No, refetch current if fail
+        setDeletingId(null);
+      } else {
+        setDeletingId(null);
+        setShowConfirm(false);
+        router.refresh();
+      }
     });
   };
 
@@ -124,6 +131,21 @@ export default function ManageFacultyClient({ faculty }: { faculty: Faculty[] })
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="mb-6 p-4 text-sm font-bold text-red-600 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="flex-1">{errorMsg}</div>
+          <button 
+            onClick={() => setErrorMsg('')}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 text-red-400 hover:text-red-600 transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -245,6 +267,7 @@ export default function ManageFacultyClient({ faculty }: { faculty: Faculty[] })
                     placeholder="••••••••" />
                   <button
                     type="button"
+                    tabIndex={-1}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                   >

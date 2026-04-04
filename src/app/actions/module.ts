@@ -93,3 +93,131 @@ export async function updateModule(
     return { error: 'Failed to update class.' };
   }
 }
+
+export async function updateModuleOutline(
+  moduleId: number,
+  name: string | null,
+  url: string | null
+) {
+  try {
+    // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
+    await prisma.$executeRawUnsafe(
+      `UPDATE Module SET outlineName = ?, outlineUrl = ? WHERE id = ?`,
+      name, url, moduleId
+    );
+
+    revalidatePath('/teacher/outline');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Raw SQL Update Error:', error);
+    return { error: 'Failed to update course outline in database.' };
+  }
+}
+
+export async function updateModuleRegisteredStudents(
+  moduleId: number,
+  name: string | null,
+  url: string | null
+) {
+  try {
+    // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
+    await prisma.$executeRawUnsafe(
+      `UPDATE Module SET registeredStudentsName = ?, registeredStudentsUrl = ? WHERE id = ?`,
+      name, url, moduleId
+    );
+
+    revalidatePath('/teacher/students');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Raw SQL Update Error:', error);
+    return { error: 'Failed to update registered students file in database.' };
+  }
+}
+
+export async function updateModuleLectureProgress(
+  moduleId: number,
+  name: string | null,
+  url: string | null
+) {
+  try {
+    // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
+    await prisma.$executeRawUnsafe(
+      `UPDATE Module SET lectureProgressName = ?, lectureProgressUrl = ? WHERE id = ?`,
+      name, url, moduleId
+    );
+
+    revalidatePath('/teacher/progress');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Raw SQL Update Error:', error);
+    return { error: 'Failed to update lecture progress file in database.' };
+  }
+}
+
+export async function updateModuleRecapSheet(
+  moduleId: number,
+  name: string | null,
+  url: string | null
+) {
+  try {
+    // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
+    await prisma.$executeRawUnsafe(
+      `UPDATE Module SET recapSheetName = ?, recapSheetUrl = ? WHERE id = ?`,
+      name, url, moduleId
+    );
+
+    revalidatePath('/teacher/recap');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Raw SQL Update Error:', error);
+    return { error: 'Failed to update recap sheet file in database.' };
+  }
+}
+
+export async function updateModuleFcar(
+  moduleId: number,
+  name: string | null,
+  url: string | null
+) {
+  try {
+    await prisma.$executeRawUnsafe(
+      `UPDATE Module SET fcarName = ?, fcarUrl = ? WHERE id = ?`,
+      name, url, moduleId
+    );
+
+    revalidatePath('/teacher/fcar');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Raw SQL Update Error:', error);
+    return { error: 'Failed to update FCAR file in database.' };
+  }
+}
+
+export async function getModuleOutline(moduleId: number) {
+  try {
+    // Using raw SQL for fetching to ensure we get the new columns even if client is old
+    const results = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT m.*, c.name as courseName, c.code as courseCode 
+       FROM Module m 
+       LEFT JOIN Course c ON m.courseId = c.id 
+       WHERE m.id = ?`,
+      moduleId
+    );
+
+    if (!results || results.length === 0) {
+      return { success: false, error: 'Module not found.' };
+    }
+
+    const module = results[0];
+    // Map raw results to expected format
+    const formattedModule = {
+      ...module,
+      course: module.courseId ? { name: module.courseName, code: module.courseCode } : null
+    };
+
+    return { success: true, module: formattedModule };
+  } catch (error) {
+    console.error('Raw SQL Fetch Error:', error);
+    return { error: 'Failed to fetch course outline from database.' };
+  }
+}

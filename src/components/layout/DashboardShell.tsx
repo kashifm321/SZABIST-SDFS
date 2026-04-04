@@ -23,7 +23,16 @@ import {
   EyeOff,
   Loader2,
   FolderOpen,
-  ClipboardList
+  ClipboardList,
+  HelpCircle,
+  FileQuestion,
+  FileEdit,
+  Award,
+  Megaphone,
+  List,
+  FileSpreadsheet,
+  Download,
+  FileBadge
 } from 'lucide-react';
 import { DashboardProvider, useDashboard } from './DashboardContext';
 
@@ -47,7 +56,7 @@ type DashboardShellProps = {
 
 // Helper for ultra-safe icon rendering (prevents 500 error if icon is missing)
 const SafeIcon = ({ icon: Icon, className }: { icon: any, className?: string }) => {
-  if (!Icon || typeof Icon !== 'function') {
+  if (!Icon) {
     return <div className={`${className} bg-gray-200/50 rounded-sm flex-shrink-0`} />;
   }
   return <Icon className={className} />;
@@ -108,20 +117,36 @@ function DashboardShellContent({
       case 'TEACHER':
         return [
           { label: 'Dashboard', icon: LayoutDashboard, href: '/teacher' },
-          { label: 'Course Info', icon: User, href: '/teacher/info' },
+          { label: 'Course Info', icon: BookOpen, href: '/teacher/info' },
           { label: 'Course Outline', icon: BookOpen, href: '/teacher/outline' },
           { label: 'Registered Students', icon: Users, href: '/teacher/students' },
           { label: 'Lecture Progress', icon: BarChart3, href: '/teacher/progress' },
           { label: 'Add Material', icon: BookPlus, href: '/teacher/materials' },
           { 
             label: 'Assignments', 
-            icon: FolderOpen, 
+            icon: ClipboardList, 
             href: '/teacher/assignments',
             subItems: [
               { label: 'Assign Assignments', href: '/teacher/assignments/create' },
               { label: 'View Submissions', href: '/teacher/assignments/submissions' }
             ]
           },
+          { 
+            label: 'Quizzes', 
+            icon: FileQuestion, 
+            href: '/teacher/quizzes',
+            subItems: [
+              { label: 'Assign Quiz', href: '/teacher/quizzes/create' },
+              { label: 'View Submissions', href: '/teacher/quizzes/submissions' }
+            ]
+          },
+          { label: 'Mid Term', icon: FileEdit, href: '/teacher/midterm' },
+          { label: 'Final Term', icon: Award, href: '/teacher/finalterm' },
+          { label: 'Announcement', icon: Megaphone, href: '/teacher/announcement' },
+          { label: 'Summary', icon: List, href: '/teacher/summary' },
+          { label: 'Recap Sheet', icon: FileSpreadsheet, href: '/teacher/recap' },
+          { label: 'FCAR', icon: FileBadge, href: '/teacher/fcar' },
+          { label: 'Download', icon: Download, href: '/teacher/download' },
         ];
       case 'STUDENT':
         return [
@@ -360,7 +385,6 @@ function DashboardShellContent({
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setSidebarOpen(true)}>
               <SafeIcon icon={Menu} className="w-5 h-5" />
             </button>
-            <h2 className="hidden sm:block text-sm font-semibold text-gray-500">{roleLabel} Portal</h2>
             {headerExtra}
           </div>
 

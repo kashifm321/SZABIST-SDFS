@@ -25,7 +25,7 @@ model User {
   // Relations
   activityFolders ActivityFolder[]
   modules         Module[]         @relation("TeacherModules")
-  enrolledModules Module[]         @relation("StudentEnrollments")
+  enrollments     StudentEnrollment[]
   
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -56,12 +56,41 @@ model Module {
   teacherId         Int?
   teacher           User?    @relation("TeacherModules", fields: [teacherId], references: [id])
   
-  enrolledStudents  User[]   @relation("StudentEnrollments")
+  enrolledStudents  StudentEnrollment[]
+  
+  outlineName       String?
+  outlineUrl        String?
+  
+  registeredStudentsName String?
+  registeredStudentsUrl  String?
+  
+  lectureProgressName    String?
+  lectureProgressUrl     String?
+  
+  recapSheetName         String?
+  recapSheetUrl          String?
+  
+  fcarName               String?
+  fcarUrl                String?
   
   materials         Material[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+// Explicit Join Table for many-to-many (User to Module)
+model StudentEnrollment {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  moduleId   Int
+  
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  module     Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  
+  enrolledAt DateTime @default(now())
+
+  @@unique([studentId, moduleId])
 }
 
 model Material {
@@ -85,7 +114,7 @@ model ActivityFolder {
   student     User     @relation(fields: [studentId], references: [id])
   
   docs        FolderDoc[]
-
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -114,4 +143,3 @@ model Course {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
-

@@ -32,6 +32,14 @@ import {
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
+// SafeIcon helper to prevent crashes if icons are missing or have name mismatches
+const SafeIcon = ({ icon: Icon, className }: { icon: any, className?: string }) => {
+  if (!Icon) {
+    return <div className={`${className} bg-gray-200/50 rounded-sm flex-shrink-0 animate-pulse`} />;
+  }
+  return <Icon className={className} />;
+};
+
 type Course = {
   id: number;
   code: string;
@@ -427,6 +435,14 @@ export default function ManageClassesClient({
     });
   };
 
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) return null;
+
   const currentModule = selectedModuleId ? initialClasses.find(c => c.id === selectedModuleId) : null;
 
   return (
@@ -500,12 +516,12 @@ export default function ManageClassesClient({
             onClick={() => setAppliedFilters(null)}
             className="h-9 px-5 bg-red-50 text-red-600 text-xs font-bold rounded-lg hover:bg-red-100 transition-all border border-red-100 flex items-center gap-2"
           >
-            <Search className="w-3.5 h-3.5" />
+            <SafeIcon icon={Search} className="w-3.5 h-3.5" />
             Disable Filter
           </button>
         ) : (
           <div className="h-9 px-5 bg-green-50 text-green-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-green-100 flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+            <SafeIcon icon={CheckCircle2} className="w-4 h-4" />
             Showing All
           </div>
         )}
@@ -521,7 +537,7 @@ export default function ManageClassesClient({
           }}
           className="h-9 px-5 bg-[#071a4a] text-white text-xs font-bold rounded-lg shadow-md hover:bg-blue-900 transition-all ml-auto flex items-center gap-2 active:scale-95"
         >
-          <Plus className="w-4 h-4" />
+          <SafeIcon icon={Plus} className="w-4 h-4" />
           Create Class
         </button>
       </div>
@@ -549,7 +565,7 @@ export default function ManageClassesClient({
                 <td colSpan={10} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center gap-3">
                     <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
-                      <Users className="w-6 h-6 text-gray-300" />
+                      <SafeIcon icon={Users} className="w-6 h-6 text-gray-300" />
                     </div>
                     <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No classes found for this session</p>
                   </div>
@@ -608,14 +624,14 @@ export default function ManageClassesClient({
                           className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all" 
                           title="Edit"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <SafeIcon icon={Pencil} className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); setClassToDelete(item); setShowDeleteClassConfirm(true); }}
                           className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all" 
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <SafeIcon icon={Trash2} className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -628,7 +644,7 @@ export default function ManageClassesClient({
                             onClick={() => setExpandedId(null)}
                             className="absolute right-4 top-4 text-red-400 hover:text-red-600 transition-colors"
                           >
-                            <X className="w-5 h-5" />
+                            <SafeIcon icon={X} className="w-5 h-5" />
                           </button>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -687,7 +703,7 @@ export default function ManageClassesClient({
                 onClick={() => setShowCreateModal(false)}
                 className="text-gray-400 hover:text-red-500 transition-all hover:rotate-90"
               >
-                <X className="w-6 h-6" />
+                <SafeIcon icon={X} className="w-6 h-6" />
               </button>
             </div>
 
@@ -728,7 +744,7 @@ export default function ManageClassesClient({
               </div>
 
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#071a4a] transition-colors" />
+                <SafeIcon icon={Search} className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#071a4a] transition-colors" />
                 <input 
                   type="text" placeholder="Search curriculum courses..." value={modalSearch} onChange={(e) => setModalSearch(e.target.value)}
                   className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-[#071a4a]/5 outline-none transition-all"
@@ -791,7 +807,7 @@ export default function ManageClassesClient({
                   onClick={() => { setShowAssignModal(false); setSelectedModuleId(null); }}
                   className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/10 text-white hover:bg-red-500 hover:rotate-90 transition-all duration-500 backdrop-blur-md border border-white/10 shadow-xl"
                 >
-                  <X className="w-6 h-6" />
+                  <SafeIcon icon={X} className="w-6 h-6" />
                 </button>
               </div>
             </div>
@@ -799,7 +815,7 @@ export default function ManageClassesClient({
             <div className="p-10 space-y-8 bg-gray-50/50">
               {/* Search Section */}
               <div className="relative group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#071a4a] transition-all duration-300" />
+                <SafeIcon icon={Search} className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#071a4a] transition-all duration-300" />
                 <input 
                   type="text" placeholder="Search faculty by name or email..." value={teacherSearch} onChange={(e) => setTeacherSearch(e.target.value)}
                   className="w-full h-16 pl-16 pr-8 bg-white border-2 border-transparent rounded-[24px] text-base font-bold text-gray-800 placeholder:text-gray-400 focus:border-[#071a4a]/10 focus:ring-8 focus:ring-[#071a4a]/5 outline-none transition-all shadow-xl shadow-gray-200/20"
@@ -811,7 +827,7 @@ export default function ManageClassesClient({
                 {filteredTeachers.length === 0 ? (
                   <div className="py-20 text-center space-y-4 bg-white rounded-3xl border-2 border-dashed border-gray-100">
                     <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto">
-                      <UserX className="w-8 h-8 text-gray-300" />
+                      <SafeIcon icon={UserX} className="w-8 h-8 text-gray-300" />
                     </div>
                     <p className="text-sm font-black text-gray-400 uppercase tracking-widest">No faculty members found</p>
                   </div>
@@ -845,7 +861,7 @@ export default function ManageClassesClient({
                           {isAssigned ? (
                             <>
                               <div className="flex items-center gap-2 px-5 py-2.5 bg-green-50 text-green-600 rounded-xl border border-green-100 text-[10px] font-black uppercase tracking-widest shadow-sm">
-                                <CheckCircle2 className="w-4 h-4" />
+                                <SafeIcon icon={CheckCircle2} className="w-4 h-4" />
                                 Assigned
                               </div>
                                 <button 
@@ -858,7 +874,7 @@ export default function ManageClassesClient({
                                   className="w-10 h-10 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-100 transition-all shadow-sm"
                                   title="Unassign"
                                 >
-                                  <UserX className="w-5 h-5" />
+                                  <SafeIcon icon={UserX} className="w-5 h-5" />
                                 </button>
                             </>
                           ) : (
@@ -869,7 +885,7 @@ export default function ManageClassesClient({
                                 onClick={() => handleAssignTeacher(teacher.id)}
                                 className="px-8 py-3 bg-[#071a4a] text-white text-[11px] font-black uppercase tracking-[2px] rounded-xl hover:bg-blue-600 hover:shadow-2xl hover:shadow-blue-600/20 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-2"
                               >
-                                {isPending ? <Clock className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
+                                {isPending ? <SafeIcon icon={Clock} className="w-4 h-4 animate-spin" /> : <SafeIcon icon={UserCheck} className="w-4 h-4" />}
                                 Assign
                               </button>
                             )
@@ -899,7 +915,7 @@ export default function ManageClassesClient({
                 <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mt-1">{currentModule?.courseName}</p>
               </div>
               <button onClick={() => setShowAddStudentsModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-gray-400 hover:text-red-500 hover:rotate-90 transition-all shadow-sm">
-                <X className="w-6 h-6" />
+                <SafeIcon icon={X} className="w-6 h-6" />
               </button>
             </div>
 
@@ -910,7 +926,7 @@ export default function ManageClassesClient({
                   onClick={() => setShowNewStudentModal(true)}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-[#071a4a] text-white shadow-md shadow-blue-900/10 hover:bg-blue-900 active:scale-[0.98]"
                 >
-                  <UserPlus className="w-3.5 h-3.5" />
+                  <SafeIcon icon={UserPlus} className="w-3.5 h-3.5" />
                   Add Student
                 </button>
                 {(() => {
@@ -932,10 +948,10 @@ export default function ManageClassesClient({
                             : 'border-dashed border-gray-300 text-gray-500 hover:border-[#071a4a] hover:text-[#071a4a] hover:bg-gray-50 disabled:opacity-50 bg-white'
                         }`}
                       >
-                        {alreadyUploaded && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        {!alreadyUploaded && uploadStatus === 'idle' && <Upload className="w-3.5 h-3.5" />}
-                        {!alreadyUploaded && uploadStatus === 'uploading' && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                        {!alreadyUploaded && uploadStatus === 'success' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {alreadyUploaded && <SafeIcon icon={CheckCircle2} className="w-3.5 h-3.5" />}
+                        {!alreadyUploaded && uploadStatus === 'idle' && <SafeIcon icon={Upload} className="w-3.5 h-3.5" />}
+                        {!alreadyUploaded && uploadStatus === 'uploading' && <SafeIcon icon={RefreshCw} className="w-3.5 h-3.5 animate-spin" />}
+                        {!alreadyUploaded && uploadStatus === 'success' && <SafeIcon icon={CheckCircle2} className="w-3.5 h-3.5" />}
                         
                         {alreadyUploaded ? 'ASSIGNED' : (currentFileName || 'Import File')}
                       </button>
@@ -956,7 +972,7 @@ export default function ManageClassesClient({
                           className="px-3 py-2.5 bg-red-500 text-white hover:bg-red-600 rounded-r-xl transition-all shadow-lg shadow-red-200 border border-red-600 border-l-0"
                           title="Reset & re-upload"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <SafeIcon icon={X} className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>
@@ -986,7 +1002,7 @@ export default function ManageClassesClient({
                         : 'bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700'
                     }`}
                   >
-                    {rosterLoading ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Users className="w-3.5 h-3.5" />}
+                    {rosterLoading ? <SafeIcon icon={RefreshCw} className="w-3.5 h-3.5 animate-spin" /> : <SafeIcon icon={Users} className="w-3.5 h-3.5" />}
                     {showRoster ? 'Hide Students' : 'View Enrolled'}
                   </button>
                 </div>
@@ -1012,12 +1028,12 @@ export default function ManageClassesClient({
                           <td colSpan={5} className="px-6 py-12 text-center">
                             {rosterLoading ? (
                               <div className="flex flex-col items-center gap-2">
-                                <Clock className="w-8 h-8 text-gray-200 animate-spin" />
+                                <SafeIcon icon={Clock} className="w-8 h-8 text-gray-200 animate-spin" />
                                 <p className="text-xs font-black text-gray-300 uppercase tracking-widest">Loading roster...</p>
                               </div>
                             ) : (
                               <div className="flex flex-col items-center gap-2 opacity-30">
-                                <Users className="w-10 h-10 text-gray-400" />
+                                <SafeIcon icon={Users} className="w-10 h-10 text-gray-400" />
                                 <p className="text-sm font-black text-gray-400">No student record found</p>
                               </div>
                             )}
@@ -1045,14 +1061,14 @@ export default function ManageClassesClient({
                                   className="p-2.5 bg-blue-50 text-blue-500 hover:bg-blue-600 hover:text-white rounded-xl transition-all shadow-sm"
                                   title="Edit Student"
                                 >
-                                  <Pencil className="w-4 h-4" />
+                                  <SafeIcon icon={Pencil} className="w-4 h-4" />
                                 </button>
                                 <button 
                                   onClick={() => setStudentToUnenroll(student)}
                                   className="p-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-all shadow-sm"
                                   title="Remove from class"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <SafeIcon icon={Trash2} className="w-4 h-4" />
                                 </button>
                               </div>
                             </td>
@@ -1078,7 +1094,7 @@ export default function ManageClassesClient({
           <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden border border-white/20 animate-in zoom-in duration-300">
             <div className="p-8 text-center space-y-6">
               <div className="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-red-100/50 animate-bounce">
-                <UserX className="w-10 h-10 text-red-500" />
+                <SafeIcon icon={UserX} className="w-10 h-10 text-red-500" />
               </div>
               
               <div className="space-y-2">
@@ -1119,7 +1135,7 @@ export default function ManageClassesClient({
                   <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mt-1">Enroll and auto-send credentials</p>
                 </div>
                 <button onClick={() => setShowNewStudentModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
-                  <X className="w-5 h-5" />
+                  <SafeIcon icon={X} className="w-5 h-5" />
                 </button>
               </div>
 
@@ -1190,7 +1206,7 @@ export default function ManageClassesClient({
                   <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mt-1">Update student record</p>
                 </div>
                 <button onClick={() => setShowEditStudentModal(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
-                  <X className="w-5 h-5" />
+                  <SafeIcon icon={X} className="w-5 h-5" />
                 </button>
               </div>
 
@@ -1253,7 +1269,7 @@ export default function ManageClassesClient({
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-white/20 animate-in zoom-in duration-300">
             <div className="p-6 text-center space-y-5">
               <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto shadow-sm">
-                <Trash2 className="w-6 h-6 text-red-500" />
+                <SafeIcon icon={Trash2} className="w-6 h-6 text-red-500" />
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-lg font-bold text-[#071a4a]">Remove Student?</h3>
@@ -1277,7 +1293,7 @@ export default function ManageClassesClient({
             {/* Header Section */}
             <div className={`p-6 text-center border-b border-gray-50 bg-gradient-to-br ${uploadResult.failed === 0 ? 'from-emerald-500 to-teal-600' : 'from-[#071a4a] to-blue-900'} text-white`}>
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl border border-white/10 animate-bounce">
-                {uploadResult.failed === 0 ? <CheckCircle2 className="w-9 h-9" /> : <AlertCircle className="w-9 h-9" />}
+                {uploadResult.failed === 0 ? <SafeIcon icon={CheckCircle2} className="w-9 h-9" /> : <SafeIcon icon={AlertCircle} className="w-9 h-9" />}
               </div>
               <h3 className="text-xl font-black tracking-tight">{uploadResult.failed === 0 ? 'Import Successful' : 'Import Partially Failed'}</h3>
               <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-1">Batch Processing Results</p>
@@ -1338,7 +1354,7 @@ export default function ManageClassesClient({
             <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 bg-[#071a4a] rounded-lg items-center justify-center flex shadow-md">
-                  <Pencil className="w-4 h-4 text-white" />
+                  <SafeIcon icon={Pencil} className="w-4 h-4 text-white" />
                 </div>
                 <div className="overflow-hidden">
                   <h2 className="text-sm font-bold text-[#071a4a] truncate">Edit Class</h2>
@@ -1346,7 +1362,7 @@ export default function ManageClassesClient({
                 </div>
               </div>
               <button onClick={() => setShowEditClassModal(false)} className="text-gray-400 hover:text-red-500 transition-colors">
-                <X className="w-5 h-5" />
+                <SafeIcon icon={X} className="w-5 h-5" />
               </button>
             </div>
 
@@ -1407,7 +1423,7 @@ export default function ManageClassesClient({
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[320px] my-auto overflow-hidden border border-gray-100 animate-in zoom-in duration-200">
             <div className="p-6 text-center space-y-5">
               <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto shadow-sm">
-                <Trash2 className="w-6 h-6 text-red-500" />
+                <SafeIcon icon={Trash2} className="w-6 h-6 text-red-500" />
               </div>
               <div className="space-y-1.5">
                 <h3 className="text-lg font-bold text-[#071a4a]">Delete Class?</h3>

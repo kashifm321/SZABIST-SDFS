@@ -5,6 +5,16 @@ import { revalidatePath } from 'next/cache';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 
+// Shared transporter for performance optimization
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  auth: {
+    user: process.env.SMTP_USER || 'test@ethereal.email',
+    pass: process.env.SMTP_PASS || 'testpass'
+  }
+});
+
 export async function addStudent(_prevState: any, formData: FormData) {
   try {
     const firstName = formData.get('firstName') as string
@@ -76,10 +86,10 @@ export async function deleteStudent(id: number) {
 
 export async function getEnrolledStudents(moduleId: number) {
   try {
-    const moduleWithStudents = await prisma.module.findUnique({
-      where: { id: moduleId },
+    const enrollments = await prisma.studentEnrollment.findMany({
+      where: { moduleId },
       include: {
-        enrolledStudents: {
+        student: {
           select: {
             id: true,
             name: true,
@@ -91,16 +101,14 @@ export async function getEnrolledStudents(moduleId: number) {
       }
     })
 
-    if (!moduleWithStudents) return { success: false, error: 'Module not found' }
-    
     return { 
       success: true, 
-      students: moduleWithStudents.enrolledStudents.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        email: s.email,
-        registrationNo: s.registrationNumber || 'N/A',
-        role: s.role
+      students: enrollments.map((e: any) => ({
+        id: e.student.id,
+        name: e.student.name,
+        email: e.student.email,
+        registrationNo: e.student.registrationNumber || 'N/A',
+        role: e.student.role
       }))
     }
   } catch (error) {
@@ -145,46 +153,38 @@ export async function enrollStudentByRegistration(
         }
       })
 
-      // Send email
-      try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.ethereal.email',
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          auth: {
-            user: process.env.SMTP_USER || 'test@ethereal.email',
-            pass: process.env.SMTP_PASS || 'testpass'
-          }
-        })
-
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || '"SZABIST SDFS" <noreply@szabist.edu.pk>',
-          to: email,
-          subject: 'Welcome to SZABIST Student Digital Folder System',
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-              <h2 style="color: #071a4a;">Welcome to SZABIST SDFS!</h2>
-              <p>Dear ${name},</p>
-              <p>Your student account has been created successfully and you have been enrolled in your course.</p>
-              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>Registration Number:</strong> ${registrationNumber}</p>
-                <p style="margin: 0;"><strong>Login Password:</strong> ${initialPassword}</p>
-              </div>
-              <p>Please log in using your email and the provided password. You will be asked to change your password upon your first login.</p>
-              <p>Best Regards,<br>SZABIST Administration</p>
+      // Send email (De-blocked for speed)
+      transporter.sendMail({
+        from: process.env.SMTP_FROM || '"SZABIST SDFS" <noreply@szabist.edu.pk>',
+        to: email,
+        subject: 'Welcome to SZABIST Student Digital Folder System',
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #071a4a;">Welcome to SZABIST SDFS!</h2>
+            <p>Dear ${name},</p>
+            <p>Your student account has been created successfully and you have been enrolled in your course.</p>
+            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Registration Number:</strong> ${registrationNumber}</p>
+              <p style="margin: 0;"><strong>Login Password:</strong> ${initialPassword}</p>
             </div>
-          `
-        })
-      } catch (emailError) {
-        console.error('Failed to send welcome email:', emailError)
-      }
+            <p>Please log in using your email and the provided password. You will be asked to change your password upon your first login.</p>
+            <p>Best Regards,<br>SZABIST Administration</p>
+          </div>
+        `
+      }).catch(err => console.error('Failed to send background email:', err));
     }
 
-    await prisma.module.update({
-      where: { id: moduleId },
-      data: {
-        enrolledStudents: {
-          connect: { id: student.id }
+    await prisma.studentEnrollment.upsert({
+      where: {
+        studentId_moduleId: {
+          studentId: student.id,
+          moduleId: moduleId
         }
+      },
+      update: {},
+      create: {
+        studentId: student.id,
+        moduleId: moduleId
       }
     })
 
@@ -204,39 +204,45 @@ export async function enrollStudentsBatch(moduleId: number, studentsData: any[])
       errors: [] as string[]
     }
 
-    for (const data of studentsData) {
-      if (!data || typeof data !== 'object') continue;
-
-      const getVal = (possibleKeys: string[]) => {
-        const key = Object.keys(data).find(k => 
-          possibleKeys.some(pk => k.toLowerCase().replace(/[^a-z0-9]/g, '') === pk.toLowerCase().replace(/[^a-z0-9]/g, ''))
-        );
-        return key ? data[key] : null;
-      }
-
-      const regNo = getVal(['registrationno', 'registrationnumber', 'regno', 'registration', 'studentid', 'rollnumber', 'rollno', 'id']);
-      const name = getVal(['name', 'fullname', 'studentname', 'student']);
-      const email = getVal(['email', 'emailaddress', 'emailid', 'mail']);
+    // Chunk size for parallel processing (Balanced for MySQL connection pool)
+    const chunkSize = 15;
+    for (let i = 0; i < studentsData.length; i += chunkSize) {
+      const chunk = studentsData.slice(i, i + chunkSize);
       
-      if (!regNo) {
-        results.failed++
-        results.errors.push('Missing registration number in row')
-        continue
-      }
+      await Promise.all(chunk.map(async (data) => {
+        if (!data || typeof data !== 'object') return;
 
-      const result = await enrollStudentByRegistration(
-        moduleId, 
-        String(regNo), 
-        name ? String(name) : undefined, 
-        email ? String(email) : undefined
-      );
+        const getVal = (possibleKeys: string[]) => {
+          const key = Object.keys(data).find(k => 
+            possibleKeys.some(pk => k.toLowerCase().replace(/[^a-z0-9]/g, '') === pk.toLowerCase().replace(/[^a-z0-9]/g, ''))
+          );
+          return key ? data[key] : null;
+        }
 
-      if (result.success) {
-        results.enrolled++;
-      } else {
-        results.failed++;
-        results.errors.push(`Row ${regNo}: ${result.error}`);
-      }
+        const regNo = getVal(['registrationno', 'registrationnumber', 'regno', 'registration', 'studentid', 'rollnumber', 'rollno', 'id']);
+        const name = getVal(['name', 'fullname', 'studentname', 'student']);
+        const email = getVal(['email', 'emailaddress', 'emailid', 'mail']);
+        
+        if (!regNo) {
+          results.failed++
+          results.errors.push('Missing registration number in row')
+          return;
+        }
+
+        const result = await enrollStudentByRegistration(
+          moduleId, 
+          String(regNo), 
+          name ? String(name) : undefined, 
+          email ? String(email) : undefined
+        );
+
+        if (result.success) {
+          results.enrolled++;
+        } else {
+          results.failed++;
+          results.errors.push(`Row ${regNo}: ${result.error}`);
+        }
+      }));
     }
 
     revalidatePath('/admin/classes')
@@ -254,12 +260,10 @@ export async function enrollStudentsBatch(moduleId: number, studentsData: any[])
 
 export async function unenrollStudent(moduleId: number, studentId: number) {
   try {
-    await prisma.module.update({
-      where: { id: moduleId },
-      data: {
-        enrolledStudents: {
-          disconnect: { id: studentId }
-        }
+    await prisma.studentEnrollment.deleteMany({
+      where: { 
+        studentId: studentId,
+        moduleId: moduleId
       }
     })
 
@@ -268,5 +272,52 @@ export async function unenrollStudent(moduleId: number, studentId: number) {
   } catch (error) {
     console.error('Unenrollment error:', error)
     return { success: false, error: 'Failed to unenroll student' }
+  }
+}
+
+export async function getEnrolledStudentsForModule(moduleId: number) {
+  try {
+    const enrollments = await prisma.studentEnrollment.findMany({
+      where: { moduleId },
+      include: {
+        student: true
+      },
+      orderBy: {
+        student: {
+          registrationNumber: 'asc'
+        }
+      }
+    });
+
+    return { 
+      success: true, 
+      students: enrollments.map(e => ({
+        id: e.student.id,
+        name: e.student.name,
+        registrationNumber: e.student.registrationNumber,
+        status: 'Enrolled'
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching enrolled students:', error);
+    return { error: 'Failed to fetch enrolled students.' };
+  }
+}
+
+export async function getModuleDetails(moduleId: number) {
+  try {
+    const module = await prisma.module.findUnique({
+      where: { id: moduleId },
+      include: {
+        course: true
+      }
+    });
+
+    if (!module) return { error: 'Module not found' };
+
+    return { success: true, module };
+  } catch (error) {
+    console.error('Error fetching module details:', error);
+    return { error: 'Failed to fetch module details.' };
   }
 }

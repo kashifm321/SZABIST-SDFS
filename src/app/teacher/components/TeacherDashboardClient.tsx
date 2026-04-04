@@ -22,10 +22,7 @@ interface TeacherDashboardClientProps {
 }
 
 export default function TeacherDashboardClient({ modules }: TeacherDashboardClientProps) {
-  const { setHeaderExtra } = useDashboard();
-  const [selectedModuleId, setSelectedModuleId] = useState<number | null>(
-    modules.length > 0 ? modules[0].id : null
-  );
+  const { setHeaderExtra, selectedModuleId, setSelectedModuleId } = useDashboard();
 
   const selectedModule = modules.find((m: Module) => m.id === selectedModuleId);
 
@@ -57,14 +54,14 @@ export default function TeacherDashboardClient({ modules }: TeacherDashboardClie
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Course Id</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Name</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Semester Level</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Section</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Semester</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Department</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">View</th>
+              <tr className="bg-gray-50/50 border-b border-gray-100 uppercase tracking-widest text-[#071a4a]/70">
+                <th className="px-6 py-4 text-xs font-black">Course Id</th>
+                <th className="px-6 py-4 text-xs font-black">Name</th>
+                <th className="px-6 py-4 text-xs font-black text-center">Semester Level</th>
+                <th className="px-6 py-4 text-xs font-black text-center">Section</th>
+                <th className="px-6 py-4 text-xs font-black text-center">Semester</th>
+                <th className="px-6 py-4 text-xs font-black">Department</th>
+                <th className="px-6 py-4 text-xs font-black text-center">View</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -94,9 +91,9 @@ export default function TeacherDashboardClient({ modules }: TeacherDashboardClie
                     <td className="px-6 py-4">
                       <span className="text-xs font-black text-gray-400 border border-gray-200 px-2 py-0.5 rounded shadow-sm">{module.department}</span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-center">
                       <button 
-                        onClick={() => setSelectedModuleId(module.id)}
+                        onClick={() => setSelectedModuleId(prev => prev === module.id ? null : module.id)}
                         className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 
                           ${selectedModuleId === module.id 
                             ? 'bg-[#071a4a] text-white shadow-lg shadow-[#071a4a]/20' 

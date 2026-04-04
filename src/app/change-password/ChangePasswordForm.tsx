@@ -22,7 +22,7 @@ export default function ChangePasswordForm() {
       } else if (result?.success) {
         setIsSuccess(true);
         setTimeout(() => {
-          router.push('/'); // Redirect to logout or home to refetch session
+          window.location.href = '/'; // Full refresh to pick up new session
         }, 1500);
       }
     });
@@ -62,6 +62,7 @@ export default function ChangePasswordForm() {
           />
           <button
             type="button"
+            tabIndex={-1}
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
           >
@@ -83,6 +84,7 @@ export default function ChangePasswordForm() {
           />
           <button
             type="button"
+            tabIndex={-1}
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
           >
