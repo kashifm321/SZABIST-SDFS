@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model User {
+  id                  Int       @id @default(autoincrement())
+  email               String    @unique
+  password            String
+  name                String
+  role                Role      @default(STUDENT)
+  registrationNumber  String?   @unique
+  mustChangePassword  Boolean   @default(false)
+  
+  // Relations
+  activityFolders ActivityFolder[]
+  modules         Module[]         @relation("TeacherModules")
+  enrolledModules Module[]         @relation("StudentEnrollments")
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Semester {
+  id        Int       @id @default(autoincrement())
+  name      String    // e.g., "Fall 2024"
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Module {
+  id                Int      @id @default(autoincrement())
+  name              String
+  description       String?
+  
+  semesterLevel     Int      @default(1)
+  department        String   @default("BSCS")
+  section           String   @default("A")
+  academicYear      Int      @default(2026)
+  academicSemester  String   @default("Fall")
+  
+  courseId          Int?
+  course            Course?  @relation(fields: [courseId], references: [id])
+  
+  teacherId         Int?
+  teacher           User?    @relation("TeacherModules", fields: [teacherId], references: [id])
+  
+  enrolledStudents  User[]   @relation("StudentEnrollments")
+  
+  materials         Material[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Material {
+  id          Int      @id @default(autoincrement())
+  title       String
+  fileUrl     String
+  
+  moduleId    Int
+  module      Module   @relation(fields: [moduleId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ActivityFolder {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  
+  studentId   Int
+  student     User     @relation(fields: [studentId], references: [id])
+  
+  docs        FolderDoc[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FolderDoc {
+  id               Int            @id @default(autoincrement())
+  name             String
+  fileUrlOrLink    String
+
+  activityFolderId Int
+  activityFolder   ActivityFolder @relation(fields: [activityFolderId], references: [id])
+  
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model Course {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  name          String
+  prerequisite  String?
+  creditHours   Int
+  
+  modules       Module[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
