@@ -50,12 +50,15 @@ function DashboardShellContent({
   role,
   children,
 }: DashboardShellProps) {
-  const { headerExtra } = useDashboard();
+  // Safe use of context
+  const dashboardContext = useDashboard();
+  const headerExtra = dashboardContext?.headerExtra || null;
+  
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Assignments']); // Keep assignments expanded by default
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Assignments']);
 
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -66,17 +69,17 @@ function DashboardShellContent({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Split Name for Profile Display
-  const nameParts = user.name.split(' ');
-  const firstName = nameParts[0] || '';
+  // ROBUST Initials Extraction: Prevents undefined.toUpperCase() crash
+  const safeName = user?.name || 'User';
+  const nameParts = safeName.trim().split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0] || 'User';
   const lastName = nameParts.slice(1).join(' ') || '';
 
-  const initials = user.name
-    .split(' ')
-    .map((n: string) => n[0])
+  const initials = nameParts
+    .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || '??';
 
   const toggleMenu = (label: string) => {
     setExpandedMenus(prev => 
@@ -84,7 +87,6 @@ function DashboardShellContent({
     );
   };
 
-  // Define Navigation Items based on Role
   const getNavItems = (): NavItem[] => {
     switch (role) {
       case 'ADMIN':
@@ -135,7 +137,6 @@ function DashboardShellContent({
         className={`fixed z-30 inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex`}
       >
-        {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-gray-200">
           <div className="relative w-10 h-10 flex-shrink-0">
             <Image
@@ -149,11 +150,11 @@ function DashboardShellContent({
           <span className="font-extrabold text-[#071a4a] text-xl tracking-tight leading-none">SZABIST</span>
         </div>
 
-        {/* Nav Items */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isExpanded = expandedMenus.includes(item.label);
             const isActive = (item.href === `/${role.toLowerCase()}` ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/'));
+            const IconComponent = item.icon;
 
             return (
               <div key={item.label} className="space-y-1">
@@ -171,7 +172,7 @@ function DashboardShellContent({
                       ? 'bg-[#071a4a] text-white'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  {IconComponent && <IconComponent className="w-4 h-4 flex-shrink-0" />}
                   <span className="flex-1">{item.label}</span>
                   {item.subItems && (
                     <Menu className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
@@ -341,15 +342,11 @@ function DashboardShellContent({
         </div>
       )}
 
-
-      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-20 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-3">
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setSidebarOpen(true)}>
@@ -360,8 +357,6 @@ function DashboardShellContent({
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
-
-            {/* Avatar Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -398,7 +393,6 @@ function DashboardShellContent({
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
