@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { logoutUser, changePassword } from '@/app/actions/auth';
@@ -25,11 +25,13 @@ import {
   FolderOpen,
   ClipboardList
 } from 'lucide-react';
+import { DashboardProvider, useDashboard } from './DashboardContext';
 
 type NavItem = {
   label: string;
   icon: any;
   href: string;
+  subItems?: { label: string; href: string }[];
 };
 
 type UserData = {
@@ -43,15 +45,17 @@ type DashboardShellProps = {
   children?: React.ReactNode;
 };
 
-export default function DashboardShell({
+function DashboardShellContent({
   user,
   role,
   children,
 }: DashboardShellProps) {
+  const { headerExtra } = useDashboard();
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Assignments']); // Keep assignments expanded by default
 
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -69,10 +73,16 @@ export default function DashboardShell({
 
   const initials = user.name
     .split(' ')
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join('')
     .toUpperCase()
     .slice(0, 2);
+
+  const toggleMenu = (label: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
+    );
+  };
 
   // Define Navigation Items based on Role
   const getNavItems = (): NavItem[] => {
@@ -88,16 +98,27 @@ export default function DashboardShell({
       case 'TEACHER':
         return [
           { label: 'Dashboard', icon: LayoutDashboard, href: '/teacher' },
-          { label: 'My Modules', icon: BookOpen, href: '/teacher' }, // Point back to teacher home for now
-          { label: 'Attendance', icon: ClipboardList, href: '/teacher' },
-          { label: 'Gradebook', icon: BarChart3, href: '/teacher' },
+          { label: 'Course Info', icon: User, href: '/teacher/info' },
+          { label: 'Course Outline', icon: BookOpen, href: '/teacher/outline' },
+          { label: 'Registered Students', icon: Users, href: '/teacher/students' },
+          { label: 'Lecture Progress', icon: BarChart3, href: '/teacher/progress' },
+          { label: 'Add Material', icon: BookPlus, href: '/teacher/materials' },
+          { 
+            label: 'Assignments', 
+            icon: FolderOpen, 
+            href: '/teacher/assignments',
+            subItems: [
+              { label: 'Assign Assignments', href: '/teacher/assignments/create' },
+              { label: 'View Submissions', href: '/teacher/assignments/submissions' }
+            ]
+          },
         ];
       case 'STUDENT':
         return [
           { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
-          { label: 'My Courses', icon: BookOpen, href: '/student' },
-          { label: 'Digital Folder', icon: FolderOpen, href: '/student' },
-          { label: 'Attendance', icon: ClipboardList, href: '/student' },
+          { label: 'My Courses', icon: BookOpen, href: '/student/courses' },
+          { label: 'Digital Folder', icon: FolderOpen, href: '/student/folder' },
+          { label: 'Attendance', icon: ClipboardList, href: '/student/attendance' },
         ];
       default:
         return [];
@@ -111,7 +132,7 @@ export default function DashboardShell({
     <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`fixed z-30 inset-y-0 left-0 w-56 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out
+        className={`fixed z-30 inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex`}
       >
         {/* Logo */}
@@ -130,19 +151,50 @@ export default function DashboardShell({
 
         {/* Nav Items */}
         <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => { router.push(item.href); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
-                ${(item.href === `/${role.toLowerCase()}` ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/'))
-                  ? 'bg-[#071a4a] text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
-            >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
-            </button>
-          ))}
+          {navItems.map((item) => {
+            const isExpanded = expandedMenus.includes(item.label);
+            const isActive = (item.href === `/${role.toLowerCase()}` ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/'));
+
+            return (
+              <div key={item.label} className="space-y-1">
+                <button
+                  onClick={() => {
+                    if (item.subItems) {
+                      toggleMenu(item.label);
+                    } else {
+                      router.push(item.href);
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
+                    ${isActive && !item.subItems
+                      ? 'bg-[#071a4a] text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  {item.subItems && (
+                    <Menu className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                  )}
+                </button>
+
+                {item.subItems && isExpanded && (
+                  <div className="ml-9 space-y-1">
+                    {item.subItems.map((sub) => (
+                      <button
+                        key={sub.label}
+                        onClick={() => { router.push(sub.href); setSidebarOpen(false); }}
+                        className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg transition-colors
+                          ${pathname === sub.href ? 'text-[#071a4a] bg-gray-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
+                      >
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
       </aside>
 
@@ -304,6 +356,7 @@ export default function DashboardShell({
               <Menu className="w-5 h-5" />
             </button>
             <h2 className="hidden sm:block text-sm font-semibold text-gray-500">{roleLabel} Portal</h2>
+            {headerExtra}
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
@@ -351,5 +404,13 @@ export default function DashboardShell({
         </main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardShell(props: DashboardShellProps) {
+  return (
+    <DashboardProvider>
+      <DashboardShellContent {...props} />
+    </DashboardProvider>
   );
 }

@@ -1,14 +1,31 @@
-import { logoutUser } from '@/app/actions/auth';
+import { cookies } from 'next/headers';
+import prisma from '@/lib/prisma';
+import TeacherDashboardClient from './components/TeacherDashboardClient';
 
-export default function TeacherDashboard() {
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Teacher Dashboard</h1>
+export default async function TeacherDashboard() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session')?.value;
+  
+  let modules: any[] = [];
+  
+  if (token) {
+    try {
+      const { verifySession: verifySessionAuth } = await import('@/lib/auth');
+      const session = await verifySessionAuth(token);
+      
+      if (session && session.userId) {
+        modules = await prisma.module.findMany({
+          where: { teacherId: Number(session.userId) },
+          include: {
+            course: true
+          },
+          orderBy: { createdAt: 'desc' }
+        });
+      }
+    } catch (error) {
+      console.error('Teacher modules fetch error:', error);
+    }
+  }
 
-
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
-        <p className="text-slate-600 text-lg">Welcome to the Teacher Portal. Manage your modules and materials here.</p>
-      </div>
-    </div>
-  );
+  return <TeacherDashboardClient modules={modules} />;
 }
