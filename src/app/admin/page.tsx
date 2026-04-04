@@ -87,7 +87,7 @@ export default async function AdminPage() {
                   </div>
                   <div className="h-10 flex flex-col items-center justify-center text-center">
                     <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter leading-none truncate w-full px-1" title={faculty.name}>
-                      {faculty.name.split(' ').map(n => n[0]).join('')}
+                      {faculty.name.trim().split(/\s+/).filter(Boolean).map(n => n[0]).join('')}
                     </span>
                     <span className="text-[8px] font-bold text-gray-400 uppercase mt-0.5">{faculty._count.modules}</span>
                   </div>
