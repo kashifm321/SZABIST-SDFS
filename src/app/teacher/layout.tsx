@@ -1,11 +1,11 @@
 import { cookies } from 'next/headers';
 import DashboardShell from '@/components/layout/DashboardShell';
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function TeacherLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const token = cookieStore.get('session')?.value;
   
-  let user = { name: 'Admin User', email: 'admin@szabist-isb.edu.pk' };
+  let user = { name: 'Teacher User', email: 'teacher@szabist-isb.edu.pk' };
   
   if (token) {
     try {
@@ -26,12 +26,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         }
       }
     } catch (error) {
-      console.error('Layout user fetch error:', error);
+      console.error('Teacher layout user fetch error:', error);
     }
   }
 
   return (
-    <DashboardShell user={user} role="ADMIN">
+    <DashboardShell user={user} role="TEACHER">
       {children}
     </DashboardShell>
   );

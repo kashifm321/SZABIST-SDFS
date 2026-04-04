@@ -22,30 +22,37 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  FolderOpen,
+  ClipboardList
 } from 'lucide-react';
 
-const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-  { label: 'Manage Faculty', icon: UserCog, href: '/admin/faculty' },
-  { label: 'Add Course', icon: BookPlus, href: '/admin/courses/add' },
-  { label: 'Classes', icon: BookOpen, href: '/admin/classes' },
-  { label: 'Manage Students', icon: GraduationCap, href: '/admin/students' },
-];
+type NavItem = {
+  label: string;
+  icon: any;
+  href: string;
+};
 
-export default function AdminDashboardClient({
-  user,
-  stats,
-  children,
-}: {
-  user: { name: string; email: string };
-  stats?: { totalFaculty: number; totalStudents: number; totalCourses: number };
+type UserData = {
+  name: string;
+  email: string;
+};
+
+type DashboardShellProps = {
+  user: UserData;
+  role: 'ADMIN' | 'TEACHER' | 'STUDENT';
   children?: React.ReactNode;
-}) {
+};
+
+export default function DashboardShell({
+  user,
+  role,
+  children,
+}: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -67,15 +74,38 @@ export default function AdminDashboardClient({
     .toUpperCase()
     .slice(0, 2);
 
-  const statCards = stats
-    ? [
-        { label: 'Total Faculty', value: stats.totalFaculty, icon: <Users className="w-8 h-8 text-gray-500" /> },
-        { label: 'Total Courses', value: stats.totalCourses, icon: <BookOpen className="w-8 h-8 text-gray-500" /> },
-        { label: 'Total Students', value: stats.totalStudents, icon: <BarChart3 className="w-8 h-8 text-gray-500" /> },
-      ]
-    : [];
+  // Define Navigation Items based on Role
+  const getNavItems = (): NavItem[] => {
+    switch (role) {
+      case 'ADMIN':
+        return [
+          { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+          { label: 'Manage Faculty', icon: UserCog, href: '/admin/faculty' },
+          { label: 'Add Course', icon: BookPlus, href: '/admin/courses/add' },
+          { label: 'Classes', icon: BookOpen, href: '/admin/classes' },
+          { label: 'Manage Students', icon: GraduationCap, href: '/admin/students' },
+        ];
+      case 'TEACHER':
+        return [
+          { label: 'Dashboard', icon: LayoutDashboard, href: '/teacher' },
+          { label: 'My Modules', icon: BookOpen, href: '/teacher' }, // Point back to teacher home for now
+          { label: 'Attendance', icon: ClipboardList, href: '/teacher' },
+          { label: 'Gradebook', icon: BarChart3, href: '/teacher' },
+        ];
+      case 'STUDENT':
+        return [
+          { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
+          { label: 'My Courses', icon: BookOpen, href: '/student' },
+          { label: 'Digital Folder', icon: FolderOpen, href: '/student' },
+          { label: 'Attendance', icon: ClipboardList, href: '/student' },
+        ];
+      default:
+        return [];
+    }
+  };
 
-  const isHome = pathname === '/admin';
+  const navItems = getNavItems();
+  const roleLabel = role.charAt(0) + role.slice(1).toLowerCase();
 
   return (
     <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
@@ -105,7 +135,7 @@ export default function AdminDashboardClient({
               key={item.label}
               onClick={() => { router.push(item.href); setSidebarOpen(false); }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
-                ${(item.href === '/admin' ? pathname === '/admin' : pathname === item.href || pathname.startsWith(item.href + '/'))
+                ${(item.href === `/${role.toLowerCase()}` ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/'))
                   ? 'bg-[#071a4a] text-white'
                   : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
             >
@@ -123,7 +153,7 @@ export default function AdminDashboardClient({
             <div className="bg-[#071a4a] p-6 text-white flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-bold">User Profile</h3>
-                <p className="text-blue-200 text-xs mt-0.5">Your personal credentials</p>
+                <p className="text-blue-200 text-xs mt-0.5">{roleLabel} Account</p>
               </div>
               <button onClick={() => setShowProfileModal(false)} className="text-white/70 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
@@ -135,7 +165,7 @@ export default function AdminDashboardClient({
                   {initials}
                 </div>
                 <span className="inline-block px-3 py-1 bg-[#071a4a]/5 text-[#071a4a] text-[10px] font-black tracking-widest uppercase rounded-full">
-                  Administrative Account
+                  {roleLabel} Portal
                 </span>
               </div>
               
@@ -273,6 +303,7 @@ export default function AdminDashboardClient({
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setSidebarOpen(true)}>
               <Menu className="w-5 h-5" />
             </button>
+            <h2 className="hidden sm:block text-sm font-semibold text-gray-500">{roleLabel} Portal</h2>
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
@@ -287,8 +318,8 @@ export default function AdminDashboardClient({
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-100">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden animate-in zoom-in-95 duration-100">
+                  <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                     <p className="text-sm font-semibold text-gray-800 truncate">{user.name}</p>
                     <p className="text-xs text-gray-500 truncate">{user.email}</p>
                   </div>
@@ -316,41 +347,7 @@ export default function AdminDashboardClient({
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          {/* If children provided (sub-pages), show them. Otherwise show Dashboard home */}
-          {children ?? (
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-800 mb-6 font-sans">Dashboard</h1>
-
-              {/* Stat Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
-                {statCards.map((card) => (
-                  <div key={card.label}
-                    className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="p-3 bg-gray-100 rounded-lg">{card.icon}</div>
-                    <div>
-                      <p className="text-sm text-gray-500 font-medium">{card.label}</p>
-                      <p className="text-3xl font-bold text-gray-800">{card.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Chart */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <h2 className="text-base font-semibold text-gray-700 mb-6 font-sans">Course Distribution by Faculty</h2>
-                <div className="flex items-end gap-4 h-48 px-4">
-                  {[0.9, 0.4, 0.7, 0.3, 0.85, 0.55, 0.65].map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <div className="w-full bg-[#071a4a] rounded-t-sm opacity-75 hover:opacity-100 transition-all"
-                        style={{ height: `${h * 100}%` }} />
-                      <span className="text-[10px] text-gray-400">{i + 1}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-center text-xs text-gray-400 mt-2 font-sans">Courses per Faculty</p>
-              </div>
-            </div>
-          )}
+          {children}
         </main>
       </div>
     </div>
