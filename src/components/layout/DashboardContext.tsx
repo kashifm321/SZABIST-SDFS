@@ -7,6 +7,8 @@ type DashboardContextType = {
   setHeaderExtra: (content: React.ReactNode | null) => void;
   selectedModuleId: number | null;
   setSelectedModuleId: React.Dispatch<React.SetStateAction<number | null>>;
+  selectedModuleName: string | null;
+  setSelectedModuleName: (name: string | null) => void;
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -14,13 +16,16 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [headerExtra, setHeaderExtra] = useState<React.ReactNode | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
+  const [selectedModuleName, setSelectedModuleName] = useState<string | null>(null);
 
   return (
     <DashboardContext.Provider value={{ 
       headerExtra, 
       setHeaderExtra,
       selectedModuleId,
-      setSelectedModuleId
+      setSelectedModuleId,
+      selectedModuleName,
+      setSelectedModuleName
     }}>
       {children}
     </DashboardContext.Provider>

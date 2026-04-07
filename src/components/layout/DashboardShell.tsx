@@ -70,6 +70,7 @@ function DashboardShellContent({
   // Safe use of context
   const dashboardContext = useDashboard();
   const headerExtra = dashboardContext?.headerExtra || null;
+  const selectedModuleName = dashboardContext?.selectedModuleName || null;
   
   const pathname = usePathname();
   const router = useRouter();
@@ -79,6 +80,66 @@ function DashboardShellContent({
 
   // Modals
   const [showProfileModal, setShowProfileModal] = useState(false);
+  
+  useEffect(() => {
+    if (pathname.includes('/teacher/assignments') && !expandedMenus.includes('Assignments')) {
+      setExpandedMenus(prev => [...prev, 'Assignments']);
+    }
+    if (pathname.includes('/teacher/quizzes') && !expandedMenus.includes('Quizzes')) {
+      setExpandedMenus(prev => [...prev, 'Quizzes']);
+    }
+  }, [pathname]);
+  
+  // Strict Session enforcement (Log out if tab/browser is closed AND on Refresh)
+  useEffect(() => {
+    const performLogout = async () => {
+      try {
+        await logoutUser();
+      } catch (e) {
+        // Next.js redirect throws an error, catch it to avoid crashing the client
+      }
+      window.location.href = '/';
+    };
+
+    if (!sessionStorage.getItem('is_logged_in')) {
+      performLogout();
+    } else if (typeof performance !== 'undefined') {
+      const navEntries = performance.getEntriesByType("navigation");
+      if (navEntries.length > 0) {
+        const navEntry = navEntries[0] as PerformanceNavigationTiming;
+        if (navEntry.type === 'reload') {
+          performLogout();
+        }
+      }
+    }
+  }, []);
+
+  // 15-Minute Global Idle Logout
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const performLogout = async () => {
+      try {
+        await logoutUser();
+      } catch (e) {}
+      window.location.href = '/';
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      // 15 minutes in milliseconds
+      timeoutId = setTimeout(performLogout, 15 * 60 * 1000);
+    };
+
+    const events = ['mousemove', 'keydown', 'scroll', 'click'];
+    events.forEach(evt => window.addEventListener(evt, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(evt => window.removeEventListener(evt, resetTimer));
+    };
+  }, []);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [passwordError, setPasswordError] = useState('');
@@ -99,9 +160,16 @@ function DashboardShellContent({
     .slice(0, 2) || '??';
 
   const toggleMenu = (label: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
-    );
+    setExpandedMenus(prev => {
+      // If we want multiple menus expanded at once, use this:
+      if (prev.includes(label)) {
+        return prev.filter(i => i !== label);
+      }
+      return [...prev, label];
+      
+      // If we only want ONE menu expanded at a time, use this:
+      // return prev.includes(label) ? [] : [label];
+    });
   };
 
   const getNavItems = (): NavItem[] => {
@@ -151,9 +219,11 @@ function DashboardShellContent({
       case 'STUDENT':
         return [
           { label: 'Dashboard', icon: LayoutDashboard, href: '/student' },
-          { label: 'My Courses', icon: BookOpen, href: '/student/courses' },
-          { label: 'Digital Folder', icon: FolderOpen, href: '/student/folder' },
-          { label: 'Attendance', icon: ClipboardList, href: '/student/attendance' },
+          { label: 'Assignments', icon: ClipboardList, href: '/student/assignments' },
+          { label: 'Quizzes', icon: FileQuestion, href: '/student/quizzes' },
+          { label: 'View Materials', icon: BookOpen, href: '/student/materials' },
+          { label: 'View Solutions', icon: FileEdit, href: '/student/solutions' },
+          { label: 'View Announcements', icon: Megaphone, href: '/student/announcements' },
         ];
       default:
         return [];
@@ -183,47 +253,65 @@ function DashboardShellContent({
           <span className="font-extrabold text-[#071a4a] text-xl tracking-tight leading-none">SZABIST</span>
         </div>
 
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto scrollbar-hide">
           {navItems.map((item) => {
             const isExpanded = expandedMenus.includes(item.label);
-            const isActive = (item.href === `/${role.toLowerCase()}` ? pathname === item.href : pathname === item.href || pathname.startsWith(item.href + '/'));
+            const isAnySubItemActive = item.subItems?.some(sub => pathname === sub.href);
+            const isParentActive = item.href === `/${role.toLowerCase()}` 
+              ? pathname === item.href 
+              : pathname === item.href || pathname.startsWith(item.href + '/');
+            
+            // Parent gets background only if it's active AND (no sub-items OR no sub-item is currently active)
+            const showParentBackground = isParentActive && (!item.subItems || !isAnySubItemActive);
             const IconComponent = item.icon;
 
             return (
               <div key={item.label} className="space-y-1">
-                <button
+                <div
                   onClick={() => {
-                    if (item.subItems) {
-                      toggleMenu(item.label);
-                    } else {
-                      router.push(item.href);
-                      setSidebarOpen(false);
-                    }
+                    if (item.href) router.push(item.href);
+                    if (item.subItems && !isExpanded) toggleMenu(item.label);
+                    if (!item.subItems) setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left
-                    ${isActive && !item.subItems
-                      ? 'bg-[#071a4a] text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer
+                    ${showParentBackground
+                      ? 'bg-[#071a4a] text-white shadow-lg shadow-blue-900/10'
+                      : isParentActive 
+                        ? 'text-[#071a4a] bg-blue-50/50' 
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
                 >
-                  <SafeIcon icon={IconComponent} className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">{item.label}</span>
+                  <div className="flex-1 flex items-center gap-3">
+                    <SafeIcon icon={IconComponent} className={`w-4 h-4 flex-shrink-0 ${showParentBackground ? 'text-white' : 'text-[#071a4a]'}`} />
+                    <span>{item.label}</span>
+                  </div>
                   {item.subItems && (
-                    <SafeIcon icon={Menu} className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    <div className="px-2 py-1 flex items-center justify-center hover:bg-black/5 rounded" onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMenu(item.label);
+                    }}>
+                      <SafeIcon icon={Menu} className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </div>
                   )}
-                </button>
+                </div>
 
-                {item.subItems && isExpanded && (
-                  <div className="ml-9 space-y-1">
-                    {item.subItems.map((sub) => (
-                      <button
-                        key={sub.label}
-                        onClick={() => { router.push(sub.href); setSidebarOpen(false); }}
-                        className={`w-full text-left px-3 py-2 text-xs font-medium rounded-lg transition-colors
-                          ${pathname === sub.href ? 'text-[#071a4a] bg-gray-50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
-                      >
-                        {sub.label}
-                      </button>
-                    ))}
+                {item.subItems && (
+                  <div 
+                    className={`ml-6 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-60 opacity-100 mt-1' : 'max-h-0 opacity-0'}`}
+                  >
+                    <div className="space-y-1 py-1 pl-4 border-l-2 border-gray-100 ml-2">
+                      {item.subItems.map((sub) => (
+                        <button
+                          key={sub.label}
+                          onClick={() => { router.push(sub.href); setSidebarOpen(false); }}
+                          className={`w-full text-left px-4 py-2.5 text-xs font-bold rounded-xl transition-all
+                            ${pathname === sub.href 
+                              ? 'text-white bg-[#071a4a] shadow-lg shadow-blue-900/20' 
+                              : 'text-gray-500 hover:text-[#071a4a] hover:bg-gray-50'}`}
+                        >
+                          {sub.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -385,7 +473,16 @@ function DashboardShellContent({
             <button className="lg:hidden text-gray-500 hover:text-gray-700" onClick={() => setSidebarOpen(true)}>
               <SafeIcon icon={Menu} className="w-5 h-5" />
             </button>
-            {headerExtra}
+            <div className="flex items-center gap-4">
+              {selectedModuleName && (
+                <div className="hidden md:flex items-center gap-2.5 bg-[#071a4a] text-white px-5 py-2 rounded-xl shadow-lg shadow-blue-900/10 border border-blue-400/20 animate-in fade-in slide-in-from-left-4 duration-500">
+                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-blue-200/60 leading-none">Selected:</span>
+                   <span className="text-[14px] font-black tracking-tight leading-none italic">{selectedModuleName}</span>
+                </div>
+              )}
+              {headerExtra}
+            </div>
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
@@ -425,7 +522,7 @@ function DashboardShellContent({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8 scrollbar-hide">
           {children}
         </main>
       </div>

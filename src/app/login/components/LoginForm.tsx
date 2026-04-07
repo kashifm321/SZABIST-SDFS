@@ -23,6 +23,7 @@ export default function LoginForm({ targetRole }: { targetRole: string }) {
       if (result?.error) {
         setErrorMsg(result.error);
       } else if (result?.success) {
+        sessionStorage.setItem('is_logged_in', 'true');
         if (result.mustChangePassword) {
           router.push('/change-password');
         } else {

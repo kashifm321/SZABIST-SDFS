@@ -48,12 +48,11 @@ export async function loginUser(prevState: any, formData: FormData) {
 
     const token = await createSession(sessionPayload);
 
-    // Set the cookie
+    // Set the cookie (session cookie expires on browser close)
     const cookieStore = await cookies();
     cookieStore.set('session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 24 hours
       path: '/',
     });
 
@@ -117,7 +116,6 @@ export async function changePassword(prevState: any, formData: FormData) {
     cookieStore.set('session', token2, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 24 hours
       path: '/',
     });
 

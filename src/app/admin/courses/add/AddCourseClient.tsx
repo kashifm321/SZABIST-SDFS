@@ -121,9 +121,9 @@ export default function AddCourseClient({ initialCourses }: { initialCourses: Co
       {/* Courses Table */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="szabist-table text-left min-w-[550px]">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100">
+              <tr>
                 <th className="px-6 py-4 text-[13px] font-black text-gray-700 uppercase tracking-widest text-center">Course Code</th>
                 <th className="px-6 py-4 text-[13px] font-black text-gray-700 uppercase tracking-widest">Course Name</th>
                 <th className="px-6 py-4 text-[13px] font-black text-gray-700 uppercase tracking-widest text-center">Pre-requisite</th>
@@ -131,7 +131,7 @@ export default function AddCourseClient({ initialCourses }: { initialCourses: Co
                 <th className="px-6 py-4 text-[13px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">

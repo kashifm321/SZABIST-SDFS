@@ -149,59 +149,61 @@ export default function ManageFacultyClient({ faculty }: { faculty: Faculty[] })
 
       {/* Table */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">First Name</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Last Name</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Email</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Role</th>
-              <th className="text-left px-5 py-3 font-semibold text-gray-600">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filtered.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="szabist-table text-sm min-w-[600px]">
+            <thead className="bg-gray-50">
               <tr>
-                <td colSpan={5} className="text-center py-12 text-gray-400 text-sm">
-                  {faculty.length === 0 ? 'No faculty members added yet.' : 'No results found.'}
-                </td>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">First Name</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Last Name</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Email</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Role</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600">Action</th>
               </tr>
-            ) : (
-              filtered.map((f) => (
-                <tr key={f.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-5 py-3.5 text-gray-700">{f.firstName}</td>
-                  <td className="px-5 py-3.5 text-gray-700">{f.lastName}</td>
-                  <td className="px-5 py-3.5 text-gray-600">{f.email}</td>
-                  <td className="px-5 py-3.5">
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-                      FACULTY
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => { setEditingFaculty(f); setErrorMsg(''); setSuccessMsg(''); }}
-                        className="flex items-center gap-1 bg-[#071a4a] hover:bg-[#050f2e] text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
-                      >
-                        <Pencil className="w-3 h-3" /> Edit
-                      </button>
-                      <button
-                        onClick={() => { setDeletingId(f.id); setShowConfirm(true); }}
-                        disabled={deletingId === f.id && isPending}
-                        className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-60"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        Delete
-                      </button>
-                    </div>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-gray-400 text-sm">
+                    {faculty.length === 0 ? 'No faculty members added yet.' : 'No results found.'}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filtered.map((f) => (
+                  <tr key={f.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3.5 text-gray-700">{f.firstName}</td>
+                    <td className="px-5 py-3.5 text-gray-700">{f.lastName}</td>
+                    <td className="px-5 py-3.5 text-gray-600">{f.email}</td>
+                    <td className="px-5 py-3.5">
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                        FACULTY
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => { setEditingFaculty(f); setErrorMsg(''); setSuccessMsg(''); }}
+                          className="flex items-center gap-1 bg-[#071a4a] hover:bg-[#050f2e] text-white px-3 py-1.5 rounded text-xs font-medium transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" /> Edit
+                        </button>
+                        <button
+                          onClick={() => { setDeletingId(f.id); setShowConfirm(true); }}
+                          disabled={deletingId === f.id && isPending}
+                          className="flex items-center gap-1 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-60"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
         {filtered.length > 0 && (
-          <div className="px-5 py-3 text-xs text-gray-400 border-t border-gray-100 text-center">
+          <div className="px-5 py-3 text-xs text-gray-400 border-t border-gray-200 text-center">
             A list of faculty members
           </div>
         )}

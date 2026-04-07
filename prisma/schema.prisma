@@ -26,6 +26,7 @@ model User {
   activityFolders ActivityFolder[]
   modules         Module[]         @relation("TeacherModules")
   enrollments     StudentEnrollment[]
+  submissions     Submission[]
   
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -74,6 +75,9 @@ model Module {
   fcarUrl                String?
   
   materials         Material[]
+  assessments       Assessment[]
+  announcements     Announcement[]
+  
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -142,4 +146,72 @@ model Course {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+enum AssessmentType {
+  ASSIGNMENT
+  QUIZ
+  MID_TERM
+  FINAL_TERM
+}
+
+model Assessment {
+  id        Int            @id @default(autoincrement())
+  type      AssessmentType
+  sequenceNo Int?          // Used for Assignment 1-4, Quiz 1-4. Null for Mid/Final.
+  marks     Float
+  startDate String
+  endDate   String
+  time      String
+  fileUrl   String
+  fileName  String
+
+  solutionFileName       String?
+  solutionShowToStudent  Boolean @default(false)
+  
+  bestFileName           String?
+  avgFileName            String?
+  worstFileName          String?
+
+  title                  String?
+  isAssigned             Boolean @default(false)
+
+  moduleId  Int
+  module    Module         @relation(fields: [moduleId], references: [id])
+  submissions Submission[]
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  
+  moduleId  Int
+  module    Module   @relation(fields: [moduleId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Submission {
+  id            Int      @id @default(autoincrement())
+  studentId     Int
+  student       User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  assessmentId  Int
+  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  
+  fileName      String?
+  fileUrl       String?
+  
+  marksObtained Float?    // For teacher to grade
+  feedback      String?   @db.Text
+  
+  submittedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([studentId, assessmentId])
 }

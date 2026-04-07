@@ -454,7 +454,7 @@ export default function ManageClassesClient({
           <select 
             value={fLevel}
             onChange={(e) => setFLevel(e.target.value)}
-            className="h-9 px-3 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold focus:bg-white focus:ring-2 focus:ring-[#071a4a]/10 outline-none transition-all cursor-pointer min-w-[100px]"
+            className="h-9 px-3 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold focus:bg-white focus:ring-2 focus:ring-[#071a4a]/10 outline-none transition-all cursor-pointer min-w-[90px]"
           >
             {[1, 2, 3, 4, 5, 6, 7, 8].map(lvl => <option key={lvl} value={String(lvl)}>{lvl}</option>)}
           </select>
@@ -464,7 +464,7 @@ export default function ManageClassesClient({
           <select 
             value={fDept}
             onChange={(e) => setFDept(e.target.value)}
-            className="h-9 px-3 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold focus:bg-white focus:ring-2 focus:ring-[#071a4a]/10 outline-none transition-all cursor-pointer min-w-[100px]"
+            className="h-9 px-3 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold focus:bg-white focus:ring-2 focus:ring-[#071a4a]/10 outline-none transition-all cursor-pointer min-w-[90px]"
           >
             <option value="BSCS">BSCS</option>
             <option value="BSSE">BSSE</option>
@@ -485,7 +485,7 @@ export default function ManageClassesClient({
           <select 
             value={fSemester}
             onChange={(e) => setFSemester(e.target.value)}
-            className="h-9 px-3 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold focus:bg-white focus:ring-2 focus:ring-[#071a4a]/10 outline-none transition-all cursor-pointer min-w-[100px]"
+            className="h-9 px-3 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold focus:bg-white focus:ring-2 focus:ring-[#071a4a]/10 outline-none transition-all cursor-pointer min-w-[90px]"
           >
             <option value="Spring">Spring</option>
             <option value="Fall">Fall</option>
@@ -535,7 +535,7 @@ export default function ManageClassesClient({
             setMYear(fYear);
             setShowCreateModal(true);
           }}
-          className="h-9 px-5 bg-[#071a4a] text-white text-xs font-bold rounded-lg shadow-md hover:bg-blue-900 transition-all ml-auto flex items-center gap-2 active:scale-95"
+          className="h-9 px-5 bg-[#071a4a] text-white text-xs font-bold rounded-lg shadow-md hover:bg-blue-900 transition-all sm:ml-auto flex items-center gap-2 active:scale-95 w-full sm:w-auto justify-center"
         >
           <SafeIcon icon={Plus} className="w-4 h-4" />
           Create Class
@@ -544,150 +544,152 @@ export default function ManageClassesClient({
 
       {/* Classes Table */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Course ID</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest">Course Name</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Pre-requisite</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Credit Hours</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Dept</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Lvl</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Sec</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Faculty</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center">Students</th>
-              <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {filteredClasses.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="px-6 py-20 text-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
-                      <SafeIcon icon={Users} className="w-6 h-6 text-gray-300" />
-                    </div>
-                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No classes found for this session</p>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-separate border-spacing-0 min-w-[900px]">
+            <thead>
+              <tr className="bg-gray-50/50 border-b border-gray-100">
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Course ID</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest border-r border-gray-200">Course Name</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Pre-requisite</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Credit Hours</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Dept</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Lvl</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Sec</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Faculty</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-center border-r border-gray-200">Students</th>
+                <th className="px-4 py-3 text-[11px] font-black text-gray-700 uppercase tracking-widest text-right">Actions</th>
               </tr>
-            ) : (
-              filteredClasses.map((item) => (
-                <React.Fragment key={item.id}>
-                  <tr 
-                    className={`hover:bg-gray-50/80 transition-colors cursor-pointer ${expandedId === item.id ? 'bg-blue-50/30' : ''}`}
-                    onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                  >
-                    <td className="px-4 py-2.5 font-bold text-[#071a4a] text-[13px] text-center">{item.courseId}</td>
-                    <td className="px-4 py-2.5 text-[13px] font-bold text-gray-800">{item.courseName}</td>
-                    <td className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase text-center">{item.prerequisite}</td>
-                    <td className="px-4 py-2.5 text-center text-[13px] font-bold">{item.creditHours}</td>
-                    <td className="px-4 py-2.5 text-center text-[13px] font-bold text-gray-500">{item.department}</td>
-                    <td className="px-4 py-2.5 text-center text-[13px] font-bold text-gray-500">{item.semesterLevel}</td>
-                    <td className="px-4 py-2.5 text-center text-[13px] font-bold text-gray-500">{item.section}</td>
-                    <td className="px-4 py-2.5 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedModuleId(item.id); setShowAssignModal(true); }}
-                          className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm mx-auto ${
-                            item.instructor !== 'TBD' 
-                            ? 'bg-green-50 text-green-600 border border-green-100' 
-                            : 'bg-[#071a4a] text-white hover:bg-blue-900 shadow-blue-900/10'
-                          }`}
-                        >
-                          {item.instructor !== 'TBD' ? 'Assigned' : 'Assign'}
-                        </button>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredClasses.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center">
+                        <SafeIcon icon={Users} className="w-6 h-6 text-gray-300" />
                       </div>
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedModuleId(item.id); setShowAddStudentsModal(true); }}
-                        className="bg-[#071a4a] text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 transition-all shadow-sm active:scale-95"
-                      >
-                        Add
-                      </button>
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <div className="flex gap-2 justify-end">
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setClassToEdit(item);
-                            setEditName(item.courseName);
-                            setEditDept(item.department);
-                            setEditLevel(item.semesterLevel);
-                            setEditSection(item.section);
-                            setEditSemester(item.academicSemester);
-                            setEditYear(String(item.academicYear));
-                            setShowEditClassModal(true);
-                          }}
-                          className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all" 
-                          title="Edit"
-                        >
-                          <SafeIcon icon={Pencil} className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setClassToDelete(item); setShowDeleteClassConfirm(true); }}
-                          className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all" 
-                          title="Delete"
-                        >
-                          <SafeIcon icon={Trash2} className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedId === item.id && (
-                    <tr onClick={(e) => e.stopPropagation()}>
-                      <td colSpan={10} className="px-8 py-0">
-                        <div className="bg-white border border-gray-100 rounded-2xl shadow-inner p-6 my-4 space-y-4 relative animate-in slide-in-from-top-2 duration-200">
+                      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No classes found for this session</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredClasses.map((item) => (
+                  <React.Fragment key={item.id}>
+                    <tr 
+                      className={`hover:bg-gray-50/80 transition-colors cursor-pointer ${expandedId === item.id ? 'bg-blue-50/30' : ''}`}
+                      onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                    >
+                      <td className="px-4 py-2.5 font-bold text-[#071a4a] text-[13px] text-center border-r border-gray-200">{item.courseId}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-bold text-gray-800 border-r border-gray-200">{item.courseName}</td>
+                      <td className="px-4 py-2.5 text-[10px] font-bold text-gray-400 uppercase text-center border-r border-gray-200">{item.prerequisite}</td>
+                      <td className="px-4 py-2.5 text-center text-[13px] font-bold border-r border-gray-200">{item.creditHours}</td>
+                      <td className="px-4 py-2.5 text-center text-[13px] font-bold text-gray-500 border-r border-gray-200">{item.department}</td>
+                      <td className="px-4 py-2.5 text-center text-[13px] font-bold text-gray-500 border-r border-gray-200">{item.semesterLevel}</td>
+                      <td className="px-4 py-2.5 text-center text-[13px] font-bold text-gray-500 border-r border-gray-200">{item.section}</td>
+                      <td className="px-4 py-2.5 text-center border-r border-gray-200">
+                        <div className="flex flex-col items-center gap-1">
                           <button 
-                            onClick={() => setExpandedId(null)}
-                            className="absolute right-4 top-4 text-red-400 hover:text-red-600 transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setSelectedModuleId(item.id); setShowAssignModal(true); }}
+                            className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm mx-auto ${
+                              item.instructor !== 'TBD' 
+                              ? 'bg-green-50 text-green-600 border border-green-100' 
+                              : 'bg-[#071a4a] text-white hover:bg-blue-900 shadow-blue-900/10'
+                            }`}
                           >
-                            <SafeIcon icon={X} className="w-5 h-5" />
+                            {item.instructor !== 'TBD' ? 'Assigned' : 'Assign'}
                           </button>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Course Code</label>
-                              <p className="font-bold text-[#071a4a]">{item.courseId}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Course Name</label>
-                              <p className="font-bold text-gray-800">{item.courseName}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pre-requisite</label>
-                              <p className="font-bold text-gray-500">{item.prerequisite}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Credit Hour</label>
-                              <p className="font-bold text-gray-700">{item.creditHours}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor</label>
-                              <p className="font-bold text-blue-600 uppercase tracking-tight">{item.instructor}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</label>
-                              <span className={`inline-block px-3 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase ${item.status === 'ASSIGNED' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
-                                {item.status}
-                              </span>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Enroll Students</label>
-                              <p className="font-bold text-gray-800">{item.totalEnrolled}</p>
-                            </div>
-                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-center border-r border-gray-200">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedModuleId(item.id); setShowAddStudentsModal(true); }}
+                          className="bg-[#071a4a] text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-blue-900 transition-all shadow-sm active:scale-95"
+                        >
+                          Add
+                        </button>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex gap-2 justify-end">
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              setClassToEdit(item);
+                              setEditName(item.courseName);
+                              setEditDept(item.department);
+                              setEditLevel(item.semesterLevel);
+                              setEditSection(item.section);
+                              setEditSemester(item.academicSemester);
+                              setEditYear(String(item.academicYear));
+                              setShowEditClassModal(true);
+                            }}
+                            className="p-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all" 
+                            title="Edit"
+                          >
+                            <SafeIcon icon={Pencil} className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setClassToDelete(item); setShowDeleteClassConfirm(true); }}
+                            className="p-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all" 
+                            title="Delete"
+                          >
+                            <SafeIcon icon={Trash2} className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))
-            )}
-          </tbody>
-        </table>
+                    {expandedId === item.id && (
+                      <tr onClick={(e) => e.stopPropagation()}>
+                        <td colSpan={10} className="px-8 py-0">
+                          <div className="bg-white border border-gray-100 rounded-2xl shadow-inner p-6 my-4 space-y-4 relative animate-in slide-in-from-top-2 duration-200">
+                            <button 
+                              onClick={() => setExpandedId(null)}
+                              className="absolute right-4 top-4 text-red-400 hover:text-red-600 transition-colors"
+                            >
+                              <SafeIcon icon={X} className="w-5 h-5" />
+                            </button>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Course Code</label>
+                                <p className="font-bold text-[#071a4a]">{item.courseId}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Course Name</label>
+                                <p className="font-bold text-gray-800">{item.courseName}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pre-requisite</label>
+                                <p className="font-bold text-gray-500">{item.prerequisite}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Credit Hour</label>
+                                <p className="font-bold text-gray-700">{item.creditHours}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Instructor</label>
+                                <p className="font-bold text-blue-600 uppercase tracking-tight">{item.instructor}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</label>
+                                <span className={`inline-block px-3 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase ${item.status === 'ASSIGNED' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                                  {item.status}
+                                </span>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Enroll Students</label>
+                                <p className="font-bold text-gray-800">{item.totalEnrolled}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* CREATE CLASS MODAL */}
@@ -762,7 +764,7 @@ export default function ManageClassesClient({
                       <th className="px-6 py-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-gray-200">
                     {filteredCourses.map(course => (
                       <tr key={course.id} className="hover:bg-gray-50/80 transition-colors">
                         <td className="px-6 py-4 font-bold text-[#071a4a] text-sm">{course.code}</td>
@@ -1022,7 +1024,7 @@ export default function ManageClassesClient({
                           <th className="px-6 py-4 text-right">Action</th>
                         </tr>
                       </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-gray-200">
                       {studentsRoster.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center">

@@ -2,6 +2,22 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+
+async function saveFileLocally(file: File | null, subDir: string) {
+  if (!file) return;
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const dir = join(process.cwd(), 'public', 'uploads', subDir);
+    await mkdir(dir, { recursive: true });
+    const path = join(dir, file.name);
+    await writeFile(path, buffer);
+  } catch (e) {
+    console.error('File write failed:', e);
+  }
+}
 
 export async function createModule(formData: FormData) {
   const name = formData.get('name') as string;
@@ -94,16 +110,22 @@ export async function updateModule(
   }
 }
 
-export async function updateModuleOutline(
-  moduleId: number,
-  name: string | null,
-  url: string | null
-) {
+export async function updateModuleOutline(formData: FormData) {
+  const moduleId = parseInt(formData.get('moduleId') as string);
+  const fileName = formData.get('fileName') as string | null;
+  const fileData = formData.get('fileData') as File | null;
+  
   try {
+    let dummyUrl = null;
+    if (fileName && fileData) {
+      await saveFileLocally(fileData, 'outlines');
+      dummyUrl = `/uploads/outlines/${fileName}`;
+    }
+
     // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
     await prisma.$executeRawUnsafe(
       `UPDATE Module SET outlineName = ?, outlineUrl = ? WHERE id = ?`,
-      name, url, moduleId
+      fileName, dummyUrl, moduleId
     );
 
     revalidatePath('/teacher/outline');
@@ -114,16 +136,22 @@ export async function updateModuleOutline(
   }
 }
 
-export async function updateModuleRegisteredStudents(
-  moduleId: number,
-  name: string | null,
-  url: string | null
-) {
+export async function updateModuleRegisteredStudents(formData: FormData) {
+  const moduleId = parseInt(formData.get('moduleId') as string);
+  const fileName = formData.get('fileName') as string | null;
+  const fileData = formData.get('fileData') as File | null;
+
   try {
+    let dummyUrl = null;
+    if (fileName && fileData) {
+      await saveFileLocally(fileData, 'students_list');
+      dummyUrl = `/uploads/students_list/${fileName}`;
+    }
+
     // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
     await prisma.$executeRawUnsafe(
       `UPDATE Module SET registeredStudentsName = ?, registeredStudentsUrl = ? WHERE id = ?`,
-      name, url, moduleId
+      fileName, dummyUrl, moduleId
     );
 
     revalidatePath('/teacher/students');
@@ -134,16 +162,22 @@ export async function updateModuleRegisteredStudents(
   }
 }
 
-export async function updateModuleLectureProgress(
-  moduleId: number,
-  name: string | null,
-  url: string | null
-) {
+export async function updateModuleLectureProgress(formData: FormData) {
+  const moduleId = parseInt(formData.get('moduleId') as string);
+  const fileName = formData.get('fileName') as string | null;
+  const fileData = formData.get('fileData') as File | null;
+
   try {
+    let dummyUrl = null;
+    if (fileName && fileData) {
+      await saveFileLocally(fileData, 'progress_reports');
+      dummyUrl = `/uploads/progress_reports/${fileName}`;
+    }
+
     // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
     await prisma.$executeRawUnsafe(
       `UPDATE Module SET lectureProgressName = ?, lectureProgressUrl = ? WHERE id = ?`,
-      name, url, moduleId
+      fileName, dummyUrl, moduleId
     );
 
     revalidatePath('/teacher/progress');
@@ -154,16 +188,22 @@ export async function updateModuleLectureProgress(
   }
 }
 
-export async function updateModuleRecapSheet(
-  moduleId: number,
-  name: string | null,
-  url: string | null
-) {
+export async function updateModuleRecapSheet(formData: FormData) {
+  const moduleId = parseInt(formData.get('moduleId') as string);
+  const fileName = formData.get('fileName') as string | null;
+  const fileData = formData.get('fileData') as File | null;
+
   try {
+    let dummyUrl = null;
+    if (fileName && fileData) {
+      await saveFileLocally(fileData, 'recap_sheets');
+      dummyUrl = `/uploads/recap_sheets/${fileName}`;
+    }
+
     // Using raw SQL to bypass Prisma Client generation issues (EPERM/file locks)
     await prisma.$executeRawUnsafe(
       `UPDATE Module SET recapSheetName = ?, recapSheetUrl = ? WHERE id = ?`,
-      name, url, moduleId
+      fileName, dummyUrl, moduleId
     );
 
     revalidatePath('/teacher/recap');
@@ -174,15 +214,21 @@ export async function updateModuleRecapSheet(
   }
 }
 
-export async function updateModuleFcar(
-  moduleId: number,
-  name: string | null,
-  url: string | null
-) {
+export async function updateModuleFcar(formData: FormData) {
+  const moduleId = parseInt(formData.get('moduleId') as string);
+  const fileName = formData.get('fileName') as string | null;
+  const fileData = formData.get('fileData') as File | null;
+
   try {
+    let dummyUrl = null;
+    if (fileName && fileData) {
+      await saveFileLocally(fileData, 'fcars');
+      dummyUrl = `/uploads/fcars/${fileName}`;
+    }
+
     await prisma.$executeRawUnsafe(
       `UPDATE Module SET fcarName = ?, fcarUrl = ? WHERE id = ?`,
-      name, url, moduleId
+      fileName, dummyUrl, moduleId
     );
 
     revalidatePath('/teacher/fcar');
@@ -219,5 +265,92 @@ export async function getModuleOutline(moduleId: number) {
   } catch (error) {
     console.error('Raw SQL Fetch Error:', error);
     return { error: 'Failed to fetch course outline from database.' };
+  }
+}
+
+export async function getModuleSummary(moduleId: number) {
+  try {
+    const results = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT m.*, c.name as courseName, c.code as courseCode 
+       FROM Module m 
+       LEFT JOIN Course c ON m.courseId = c.id 
+       WHERE m.id = ?`,
+      moduleId
+    );
+
+    if (!results || results.length === 0) {
+      return { success: false, error: 'Module not found.' };
+    }
+
+    const assessments = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT * FROM Assessment WHERE moduleId = ? ORDER BY type ASC, sequenceNo ASC`,
+      moduleId
+    );
+
+    return { 
+      success: true, 
+      module: results[0],
+      assessments 
+    };
+  } catch (error) {
+    console.error('Summary Fetch Error:', error);
+    return { error: 'Failed to fetch module summary.' };
+  }
+}
+
+export async function getDownloadableFiles(moduleId: number) {
+  try {
+    const results = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT m.*, c.name as courseName, c.code as courseCode 
+       FROM Module m 
+       LEFT JOIN Course c ON m.courseId = c.id 
+       WHERE m.id = ?`,
+      moduleId
+    );
+
+    if (!results || results.length === 0) {
+      return { success: false, error: 'Module not found.' };
+    }
+
+    const module = results[0];
+
+    const assessments = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT * FROM Assessment WHERE moduleId = ?`,
+      moduleId
+    );
+
+    const materials = await prisma.$queryRawUnsafe<any[]>(
+      `SELECT * FROM Material WHERE moduleId = ?`,
+      moduleId
+    );
+
+    return { 
+      success: true, 
+      files: {
+        courseName: module.courseName,
+        courseCode: module.courseCode,
+        outline: module.outlineUrl ? { name: module.outlineName || 'Course Outline.pdf', url: module.outlineUrl } : null,
+        students: module.registeredStudentsUrl ? { name: module.registeredStudentsName || 'Registered Students.pdf', url: module.registeredStudentsUrl } : null,
+        progress: module.lectureProgressUrl ? { name: module.lectureProgressName || 'Lecture Progress.pdf', url: module.lectureProgressUrl } : null,
+        recap: module.recapSheetUrl ? { name: module.recapSheetName || 'Recap Sheet.pdf', url: module.recapSheetUrl } : null,
+        fcar: module.fcarUrl ? { name: module.fcarName || 'FCAR.pdf', url: module.fcarUrl } : null,
+        materials: materials.map(m => ({ name: m.title || m.fileUrl.split('/').pop(), url: m.fileUrl })),
+        assessments: assessments.map(a => ({ 
+          type: a.type, 
+          name: a.fileName, 
+          url: a.fileUrl,
+          title: a.title,
+          sequenceNo: a.sequenceNo,
+          isAssigned: a.isAssigned,
+          sol: a.solutionFileName ? { name: a.solutionFileName, url: `/uploads/${a.type.toLowerCase()}s/${a.solutionFileName}` } : null,
+          best: a.bestFileName ? { name: a.bestFileName, url: `/uploads/${a.type.toLowerCase()}s/${a.bestFileName}` } : null,
+          avg: a.avgFileName ? { name: a.avgFileName, url: `/uploads/${a.type.toLowerCase()}s/${a.avgFileName}` } : null,
+          worst: a.worstFileName ? { name: a.worstFileName, url: `/uploads/${a.type.toLowerCase()}s/${a.worstFileName}` } : null
+        }))
+      }
+    };
+  } catch (error) {
+    console.error('Download Files Fetch Error:', error);
+    return { error: 'Failed to fetch downloadable files.' };
   }
 }

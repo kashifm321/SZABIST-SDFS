@@ -3,9 +3,9 @@ import Image from "next/image";
 
 export default function LandingPage() {
   return (
-    <div className="relative flex flex-col min-h-screen overflow-hidden bg-slate-100">
-      {/* Background Image - completely visible with no dark overlays */}
-      <div className="absolute inset-0 z-0">
+    <div className="relative flex flex-col min-h-screen overflow-hidden font-sans">
+      {/* Background Image - Fixed to viewport to guarantee visibility */}
+      <div className="fixed inset-0 z-[-1]">
         <Image
           src="/bg_image.jpg"
           alt="Campus Background"
@@ -13,6 +13,8 @@ export default function LandingPage() {
           className="object-cover"
           priority
         />
+        {/* Subtle Gradient Overlay to ensure readability */}
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
       {/* Top Header */}

@@ -10,8 +10,10 @@ import {
   Trash2, 
   CheckCircle2, 
   Loader2, 
-  AlertCircle 
+  AlertCircle,
+  X 
 } from 'lucide-react';
+import DocumentViewer from '@/components/ui/DocumentViewer';
 
 export default function LectureProgressPage() {
   const { selectedModuleId, setHeaderExtra } = useDashboard();
@@ -21,9 +23,8 @@ export default function LectureProgressPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewFileUrl, setViewFileUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (module) {
@@ -40,11 +41,7 @@ export default function LectureProgressPage() {
     return () => setHeaderExtra(null);
   }, [module, setHeaderExtra]);
 
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+
 
   useEffect(() => {
     if (!selectedModuleId) {
@@ -86,8 +83,6 @@ export default function LectureProgressPage() {
       return;
     }
 
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
     setPendingFile(file);
     setError(null);
     setSuccess(null);
@@ -103,12 +98,21 @@ export default function LectureProgressPage() {
     const fileName = pendingFile.name;
     const dummyUrl = `/progress/${fileName}`;
 
+    const formData = new FormData();
+    formData.append('moduleId', String(selectedModuleId));
+    formData.append('fileData', pendingFile);
+    formData.append('fileName', pendingFile.name);
+
     try {
-      const res = await updateModuleLectureProgress(Number(selectedModuleId), fileName, dummyUrl);
+      const res = await updateModuleLectureProgress(formData);
       if (res.success) {
-        setModule((prev: any) => ({ ...prev, lectureProgressName: fileName, lectureProgressUrl: dummyUrl }));
+        setModule((prev: any) => ({ 
+          ...prev, 
+          lectureProgressName: pendingFile.name, 
+          lectureProgressUrl: `/uploads/progress_reports/${pendingFile.name}` 
+        }));
         setPendingFile(null);
-        setSuccess(`Lecture progress uploaded: ${fileName}`);
+        setSuccess(`Progress report uploaded: ${pendingFile.name}`);
         
         const fileInput = document.getElementById('progress-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
@@ -132,11 +136,14 @@ export default function LectureProgressPage() {
     setUpdating(true);
     setError(null);
 
+    const formData = new FormData();
+    formData.append('moduleId', String(selectedModuleId));
+    formData.append('fileName', '');
+
     try {
-      const res = await updateModuleLectureProgress(Number(selectedModuleId), null, null);
+      const res = await updateModuleLectureProgress(formData);
       if (res.success) {
         setModule((prev: any) => ({ ...prev, lectureProgressName: null, lectureProgressUrl: null }));
-        setPreviewUrl(null);
         setPendingFile(null);
         
         const fileInput = document.getElementById('progress-upload') as HTMLInputElement;
@@ -264,7 +271,7 @@ export default function LectureProgressPage() {
             {module?.lectureProgressName ? (
               <div className="flex gap-4 w-full justify-center animate-in fade-in slide-in-from-bottom-4">
                 <button
-                  onClick={() => setIsViewModalOpen(true)}
+                  onClick={() => setViewFileUrl(module.lectureProgressUrl)}
                   className="px-8 bg-[#071a4a] hover:bg-[#051133] text-white py-3 rounded-xl text-sm font-black flex items-center justify-center gap-2 shadow-xl shadow-[#071a4a]/30 transition-all hover:scale-[1.05] active:scale-95"
                 >
                   <Eye className="w-4 h-4" /> View
@@ -296,52 +303,7 @@ export default function LectureProgressPage() {
 
       {/* --- MODALS --- */}
 
-      {/* 1. VIEW MODAL (PREVIEWER) */}
-      {isViewModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setIsViewModalOpen(false)}></div>
-          <div className="relative bg-white w-full h-full max-w-[96vw] max-h-[94vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-400 border border-white/10">
-            {/* Modal Header */}
-            <div className="bg-[#071a4a] px-10 py-5 flex items-center justify-between border-b border-white/10 shrink-0">
-               <div className="flex items-center gap-5 text-white">
-                 <div className="bg-red-500/20 p-2.5 rounded-xl">
-                   <FileText className="w-6 h-6 text-red-400" />
-                 </div>
-                 <div className="flex flex-col">
-                   <h3 className="text-sm font-black tracking-[1px] uppercase truncate max-w-xl leading-none mb-1">{module?.lectureProgressName}</h3>
-                   <span className="text-[10px] text-blue-300/60 font-black uppercase tracking-[2px]">SECURE PDF STREAM • SZABIST CLOUD</span>
-                 </div>
-               </div>
-               <button 
-                onClick={() => setIsViewModalOpen(false)} 
-                className="bg-white/10 hover:bg-red-500 hover:text-white px-8 py-3 rounded-2xl text-white font-black text-xs transition-all active:scale-95 uppercase tracking-widest border border-white/5"
-               >
-                 Exit Viewer
-               </button>
-            </div>
-            {/* Modal Body (REAL PDF VIEWER) */}
-            <div className="flex-1 bg-gray-900 flex items-center justify-center overflow-hidden">
-               {previewUrl ? (
-                 <iframe 
-                   src={previewUrl} 
-                   className="w-full h-full border-none"
-                   title="PDF Viewer"
-                 />
-               ) : (
-                 <div className="text-center space-y-6 max-w-lg p-12">
-                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/10">
-                      <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
-                    </div>
-                    <div className="space-y-2">
-                       <h4 className="text-white text-xl font-black">Decrypting Module Content</h4>
-                       <p className="text-gray-400 text-sm font-medium">Please wait while the academic server processes the PDF stream for secure viewing.</p>
-                    </div>
-                 </div>
-               )}
-            </div>
-          </div>
-        </div>
-      )}
+      <DocumentViewer url={viewFileUrl} onClose={() => setViewFileUrl(null)} />
 
       {/* 2. DELETE CONFIRMATION MODAL */}
       {isDeleteModalOpen && (

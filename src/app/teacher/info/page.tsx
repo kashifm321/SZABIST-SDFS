@@ -123,38 +123,40 @@ export default function CourseInfoPage() {
           </span>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-gray-200">
-          <table className="w-full text-left border-collapse relative">
-            <thead className="sticky top-0 z-10 bg-[#071a4a] text-white">
-              <tr className="uppercase tracking-widest">
-                <th className="px-6 py-4 text-xs font-black">Roll No</th>
-                <th className="px-6 py-4 text-xs font-black">Name</th>
-                <th className="px-6 py-4 text-xs font-black text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {students.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-gray-400 text-sm italic">
-                    No students have been enrolled in this course yet.
-                  </td>
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+            <table className="w-full text-left border-separate border-spacing-0 relative min-w-[400px]">
+              <thead className="sticky top-0 z-10 bg-[#071a4a] text-white">
+                <tr className="uppercase tracking-widest">
+                  <th className="px-6 py-4 text-xs font-black border-r border-white/10">Roll No</th>
+                  <th className="px-6 py-4 text-xs font-black border-r border-white/10">Name</th>
+                  <th className="px-6 py-4 text-xs font-black text-center">Status</th>
                 </tr>
-              ) : (
-                students.map((student) => (
-                  <tr key={student.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-bold text-gray-600">{student.registrationNumber}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-[#071a4a]">{student.name}</td>
-                    <td className="px-6 py-4 text-center text-xs">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full font-bold shadow-sm border border-green-100">
-                        <ClipboardCheck className="w-3.5 h-3.5" />
-                        Enrolled
-                      </span>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {students.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-gray-400 text-sm italic">
+                      No students have been enrolled in this course yet.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  students.map((student) => (
+                    <tr key={student.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 text-sm font-bold text-gray-600 border-r border-gray-200">{student.registrationNumber}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-[#071a4a] border-r border-gray-200">{student.name}</td>
+                      <td className="px-6 py-4 text-center text-xs">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-600 rounded-full font-bold shadow-sm border border-green-100">
+                          <ClipboardCheck className="w-3.5 h-3.5" />
+                          Enrolled
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
